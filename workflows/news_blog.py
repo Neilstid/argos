@@ -1,57 +1,84 @@
 from datetime import datetime
-from typing import Iterator, Union
+import json
+from typing import Union
 
-from agno.agent import Message
-from agno.workflow import Workflow
-from llmlingua import PromptCompressor
+import yaml
+from crewai import Crew
 
-from agents.redactor import build_writer_agent
+from agents.redaction import build_redaction_crew
+from news_handler.map_reduce import map_and_reduce
 from tools.rss_feed import BlogCollector
 
 
 class NewsBlogWorkflow:
+    """
+    AI news blog generator workflow.
 
-    writer = build_writer_agent()
+    Collects RSS feeds, maps/reduces articles via LLM agents, and produces
+    a Markdown blog post formatted for Hugo.
+    """
 
     def __init__(self):
         self.__feed_reader = BlogCollector()
+        self.__interest = ""
+        self.__result = None
 
 
-    def add_feed(self, url):
+    def build(self, config_path: str):
+        with open(config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        for source in config.get("sources", []):
+            self.__feed_reader.add_source(source)
+
+        self.__interest = config.get("interest", "")
+        self.__model = config.get("model", "mistral/mistral-medium-latest")
+
+
+    def add_feed(self, url: str):
         self.__feed_reader.add_source(url)
 
 
     def run(
         self,
-        time_limit: Union[int, datetime] = 1
+        time_limit: Union[int, datetime] = 1,
     ):
         news = self.__feed_reader.collect(time_limit=time_limit)
+        news = map_and_reduce(news, interest=self.__interest, model_name=self.__model)
 
-        # Context 
-        sources = f"""
-        Here are sources from today feeds. Pick some that most fits to your knowledge and interest. Then write a blog 
-        article based on your selected sources.
+        redaction_crew = build_redaction_crew(interest=self.__interest, model_name=self.__model)
 
-        # SOURCES
-        {str(news)}
-        """
+        result = redaction_crew.kickoff(inputs={"topic": json.dumps(news)})
 
-        # Compress prompt
-        llm_lingua = PromptCompressor()
-        compressed_prompt = llm_lingua.compress_prompt(
-            sources,
-            rate=0.55,
-            # Set the special parameter for LongLLMLingua
-            condition_in_question="after_condition",
-            reorder_context="sort",
-            dynamic_context_compression_ratio=0.3,
-            condition_compare=True,
-            context_budget="+100",
-            rank_method="longllmlingua",
-        )
+        self.__result = result.json_dict
+        return result
 
-        return self.writer.run(
-            input=[
-                Message(role="user", content=compressed_prompt)
-            ]
-        )
+
+    def format(self, output_path: str = None):
+        article = self.__result
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
+        formatted = f"""---
+title: "{article.title if hasattr(article, 'title') else 'AI News Blog'}"
+summary: "{article.summary if hasattr(article, 'summary') else ''}"
+date: {date_str}
+math: true
+authors:
+  - admin
+tags:
+  - Hugo
+  - Hugo Blox Builder
+  - Markdown
+image:
+  caption: 'Embed rich media such as videos and LaTeX math'
+---
+
+{article.content if hasattr(article, 'content') else str(article)}
+
+Written with [Argos](https://github.com/Neilstid/argos)"""
+
+        if output_path:
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write(formatted)
+        else:
+            return formatted

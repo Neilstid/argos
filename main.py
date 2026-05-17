@@ -1,58 +1,26 @@
 from workflows.news_blog import NewsBlogWorkflow
+import click
+from datetime import datetime
+from dotenv import load_dotenv
 
-tw = NewsBlogWorkflow()
+@click.command()
+@click.option('--config', type=click.Path(), help='Path to the configuration file (hint: check in feeds folder). Configuration file must be in .yaml format.')
+@click.option('--output', type=click.Path(), help='Blog post saving path. You may include date with {date}. Blog post must be .md')
+def write_blog(
+    config: str,
+    output: str
+):
+    # Formatted output path
+    data = {
+        "date": datetime.now().strftime("%Y-%m-%d")
+    }
+    output = output.format(**data)
 
-tw.add_feed("https://www.artificialintelligence-news.com/feed/")
-tw.add_feed("https://www.therundown.ai/feed")
-# tw.add_feed("https://tldr.tech/ai/rss")
-# tw.add_feed("https://openai.com/news/rss.xml")
-# tw.add_feed("https://deepmind.google/blog/rss.xml")
-# tw.add_feed("https://huggingface.co/blog/feed.xml")
-# tw.add_feed("https://www.jmlr.org/jmlr.xml")
-# tw.add_feed("https://thegradient.pub/rss/")
-# tw.add_feed("https://distill.pub/rss.xml")
-# tw.add_feed("https://ai.googleblog.com/feeds/posts/default")
-# tw.add_feed("https://blogs.nvidia.com/feed/")
-# tw.add_feed("https://towardsdatascience.com/feed")
-# tw.add_feed("https://www.kdnuggets.com/feed")
-# tw.add_feed("https://machinelearningmastery.com/feed/")
-# tw.add_feed("https://bair.berkeley.edu/blog/feed.xml")
-# tw.add_feed("https://www.analyticsvidhya.com/feed/")
-# tw.add_feed("https://www.artificial-intelligence.blog/ai-news/category/news?format=rss")
-# tw.add_feed("https://www.artificial-intelligence.blog/ai-news/category/technology?format=rss")
-# tw.add_feed("https://www.artificial-intelligence.blog/ai-news/category/business?format=rss")
-# tw.add_feed("https://www.artificial-intelligence.blog/ai-news/category/games?format=rss")
-# tw.add_feed("https://www.artificial-intelligence.blog/ai-news/category/ethics?format=rss")
-# tw.add_feed("https://www.artificial-intelligence.blog/ai-news/category/education?format=rss")
-# tw.add_feed("https://techspective.net/category/technology/artificial-intelligence/feed/")
-# tw.add_feed("https://qudata.com/en/news/rss.xml")
-# tw.add_feed("https://www.cogitotech.com/feed/")
-# tw.add_feed("https://www.oreilly.com/radar/topics/ai-ml/feed/")
-# tw.add_feed("https://www.spritle.com/blog/feed/")
-# tw.add_feed("https://www.shaip.com/feed/")
-# tw.add_feed("https://www.aiiottalk.com/feed/")
-# tw.add_feed("https://news.microsoft.com/source/topics/ai/feed/")
-# tw.add_feed("https://www.clarifai.com/blog/rss.xml")
-# tw.add_feed("https://bigdataanalyticsnews.com/category/artificial-intelligence/feed/")
-# tw.add_feed("https://www.viact.ai/blog-feed.xml")
-# tw.add_feed("https://aws.amazon.com/fr/blogs/machine-learning/feed/")
-# tw.add_feed("https://www.crn.com/news/cloud/rss.xml")
-# tw.add_feed("https://www.crn.com/news/data-center/rss.xml")
-# tw.add_feed("https://www.crn.com/news/internet-of-things/rss.xml")
-# tw.add_feed("https://www.crn.com/news/applications-os/rss.xml")
-# tw.add_feed("https://www.techradar.com/rss/news/internet")
-# tw.add_feed("https://www.techradar.com/rss/news/software")
-# tw.add_feed("https://www.techradar.com/rss/news/world-of-tech")
-# tw.add_feed("https://www.techradar.com/rss/news/computing")
-# tw.add_feed("https://blogs.microsoft.com/ai/feed/")
-# tw.add_feed("https://news.mit.edu/rss/topic/artificial-intelligence")
-# tw.add_feed("https://developers.redhat.com/taxonomy/term/12611/feed")
-# tw.add_feed("https://lucumr.pocoo.org/feed.atom")
-tw.add_feed("https://replicate.com/blog/rss")
-tw.add_feed("https://techcommunity.microsoft.com/t5/s/gxcuf89792/rss/board?board.id=azure-ai-foundry-blog")
-tw.add_feed("https://feeds.feedburner.com/kdnuggets-data-mining-analytics")
-tw.add_feed("https://debuggercafe.com/feed/")
-tw.add_feed("https://kill-the-newsletter.com/feeds/xsw1593e24tkyvws6ojd.xml") # https://kill-the-newsletter.com/feeds/xsw1593e24tkyvws6ojd
-tw.add_feed("https://www.reddit.com/user/ngeekson/m/techwatch/.rss")
+    tw = NewsBlogWorkflow()
+    tw.build(config)
+    tw.run(1)
+    tw.format(output)
 
-print(tw.run(1).content)
+if __name__ == '__main__':
+    load_dotenv()
+    write_blog()

@@ -1,0 +1,29 @@
+sources:
+ - https://www.artificialintelligence-news.com/feed/
+ - https://www.therundown.ai/feed
+ - https://tldr.tech/ai/rss
+ - https://openai.com/news/rss.xml
+ - https://deepmind.google/blog/rss.xml
+ - https://huggingface.co/blog/feed.xml
+ - https://machinelearningmastery.com/feed/
+ - https://bair.berkeley.edu/blog/feed.xml
+ - https://ai.googleblog.com/feeds/posts/default
+ - https://blogs.nvidia.com/feed/
+ - https://bigdataanalyticsnews.com/category/artificial-intelligence/feed/
+ - https://lucumr.pocoo.org/feed.atom
+ - https://debuggercafe.com/feed/
+ - https://www.theneuron.ai/feed/
+ - https://www.bensbites.co/feed
+ - https://www.marktechpost.com/feed/
+ - https://mistral.ai/news/index.xml
+ - https://ai.meta.com/blog/rss/
+ - https://towardsdatascience.com/feed/
+ - https://techcrunch.com/category/artificial-intelligence/feed/
+ - https://venturebeat.com/feed
+ - https://sifted.eu/sector/artificial-intelligence/feed
+ - https://kill-the-newsletter.com/feeds/xsw1593e24tkyvws6ojd.xml
+
+
+interest: Artificial Intelligence (new models, new technologies, new tools, new startups, new trending github repo) and data science (new framework, methods, updates). You like very much computer vision and NLP subject in particular.
+
+model: mistral/mistral-medium-latest
