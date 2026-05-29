@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import os
 from typing import Union
 
 import yaml
@@ -76,6 +77,9 @@ image:
 {article.content if hasattr(article, 'content') else str(article)}
 
 Written with [Argos](https://github.com/Neilstid/argos)"""
+
+        if not os.path.exists(os.path.dirname(output_path)):
+            os.makedirs(output_path, exist_ok=True)
 
         if output_path:
             with open(output_path, "w", encoding="utf-8") as f:
