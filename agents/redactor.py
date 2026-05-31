@@ -1,5 +1,7 @@
 from crewai import Agent
 
+from agents.models.article import Article
+
 
 def build_writer_agent(
     interest: str,
@@ -43,4 +45,5 @@ def build_writer_agent(
         verbose=True,
         allow_delegation=False,
         llm=model_name,
+        response_format=Article
     )

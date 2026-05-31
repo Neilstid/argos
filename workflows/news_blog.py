@@ -60,8 +60,8 @@ class NewsBlogWorkflow:
         date_str = datetime.now().strftime("%Y-%m-%d")
 
         formatted = f"""---
-title: "{article.title if hasattr(article, 'title') else 'AI News Blog'}"
-summary: "{article.summary if hasattr(article, 'summary') else ''}"
+title: "{article["title"] if 'title' in article.keys() else 'AI News Blog'}"
+summary: "{article["summary"] if 'summary' in article.keys() else ''}"
 date: {date_str}
 math: true
 authors:
@@ -74,7 +74,7 @@ image:
   caption: 'Embed rich media such as videos and LaTeX math'
 ---
 
-{article.content if hasattr(article, 'content') else str(article)}
+{article["content"] if 'content' in article.keys() else str(article)}
 
 Written with [Argos](https://github.com/Neilstid/argos)"""
 
