@@ -42,8 +42,9 @@ def build_writer_agent(
             - Optimize for SEO
             - Add engaging subheadings\
         """,
+        max_iter=2,
         verbose=True,
-        allow_delegation=False,
+        allow_delegation=True,
         llm=model_name,
         response_format=Article
     )
