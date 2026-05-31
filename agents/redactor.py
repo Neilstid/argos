@@ -44,7 +44,7 @@ def build_writer_agent(
         """,
         max_iter=2,
         verbose=True,
-        allow_delegation=True,
+        allow_delegation=False,
         llm=model_name,
         response_format=Article
     )
