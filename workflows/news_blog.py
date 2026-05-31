@@ -66,10 +66,7 @@ date: {date_str}
 math: true
 authors:
   - admin
-tags:
-  - Hugo
-  - Hugo Blox Builder
-  - Markdown
+tags:\n\t- {'\n\t- '.join(article["tags"])}
 image:
   caption: 'Embed rich media such as videos and LaTeX math'
 ---
