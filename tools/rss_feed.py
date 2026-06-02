@@ -107,6 +107,63 @@ class BlogCollector:
             seen_urls = set()
             soup = BeautifulSoup(html_content, "html.parser")
             
+            def get_figure_caption(img_node) -> Optional[str]:
+                curr = img_node.parent
+                while curr and curr.name not in [None, '[document]', 'html', 'body']:
+                    if curr.name == 'figure':
+                        figcaption = curr.find("figcaption")
+                        if figcaption:
+                            t = figcaption.get_text().strip()
+                            if t:
+                                return t
+                        break
+                    curr = curr.parent
+                return None
+
+            def get_adjacent_p_text(img_node) -> Optional[str]:
+                p_ancestor = None
+                curr = img_node.parent
+                while curr and curr.name not in [None, '[document]', 'html', 'body']:
+                    if curr.name == 'p':
+                        p_ancestor = curr
+                        break
+                    curr = curr.parent
+                
+                target = p_ancestor if p_ancestor else img_node
+                
+                prev_p = target.find_previous_sibling("p")
+                if prev_p:
+                    t = prev_p.get_text().strip()
+                    if t:
+                        return t[:200]
+                        
+                next_p = target.find_next_sibling("p")
+                if next_p:
+                    t = next_p.get_text().strip()
+                    if t:
+                        return t[:200]
+                        
+                return None
+
+            def get_nearest_title(img_node) -> Optional[str]:
+                pred_heading = img_node.find_previous(["h1", "h2", "h3", "h4", "h5", "h6"])
+                if pred_heading:
+                    t = pred_heading.get_text().strip()
+                    if t:
+                        return t
+                        
+                succ_heading = img_node.find_next(["h1", "h2", "h3", "h4", "h5", "h6"])
+                if succ_heading:
+                    t = succ_heading.get_text().strip()
+                    if t:
+                        return t
+                        
+                if soup.title:
+                    t = soup.title.get_text().strip()
+                    if t:
+                        return t
+                return None
+
             for img in soup.find_all("img"):
                 src = img.get("src")
                 if not src:
@@ -124,13 +181,26 @@ class BlogCollector:
                 if absolute_src.startswith("data:"):
                     continue
                 
-                alt = img.get("alt", "").strip()
-                title = img.get("title", "").strip()
-                if alt == "" and title == "":
-                    continue
+                # Try figure caption first
+                desc = get_figure_caption(img)
                 
-                # Get the image description
-                desc = alt or title
+                # Fallback to alt/title
+                if not desc:
+                    alt = img.get("alt", "").strip()
+                    title_attr = img.get("title", "").strip()
+                    desc = alt or title_attr
+                
+                # Fallback to adjacent paragraph
+                if not desc:
+                    desc = get_adjacent_p_text(img)
+                
+                # Fallback to nearest title/heading
+                if not desc:
+                    desc = get_nearest_title(img)
+                
+                # If all fallback strategies failed, skip this image
+                if not desc:
+                    continue
                 
                 # Generate unique ID for this media
                 media_id = f"media-{uuid4().hex[:8]}"
