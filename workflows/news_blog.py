@@ -6,8 +6,8 @@ from typing import Union, Optional
 import yaml
 from crewai import Crew
 
-from agents.redaction import build_redaction_crew
-from news_handler.map_reduce import map_and_reduce
+from agents.redaction import build_redaction_crew, build_editor_crew
+from news_handler.map_reduce import map_and_reduce, keep_key
 from tools.rss_feed import BlogCollector
 
 
@@ -34,7 +34,8 @@ class NewsBlogWorkflow:
             self.__feed_reader.add_source(source)
 
         self.__interest = config.get("interest", "")
-        self.__model = config.get("model", "mistral/mistral-medium-latest")
+        self.__summary_model = config.get("summary_model", config.get("model", "mistral/mistral-small-latest"))
+        self.__writer_model = config.get("writer_model", config.get("model", "mistral/mistral-medium-latest"))
         self.__time_limit = config.get("time_limit", 1)
 
 
@@ -50,17 +51,45 @@ class NewsBlogWorkflow:
         time_limit = time_limit if not time_limit is None else self.__time_limit
 
         news = self.__feed_reader.collect(time_limit=time_limit)
-        news = map_and_reduce(news, interest=self.__interest, model_name=self.__model)
+        # Use summary model for mapping and reducing articles
+        news = map_and_reduce(news, interest=self.__interest, model_name=self.__summary_model)
+
+        # 1. Run Editor Crew to choose articles and create plan (using summary model, abstracts only)
+        editor_news = keep_key(news, ["paperId", "title", "abstract"])
+        editor_crew = build_editor_crew(interest=self.__interest, model_name=self.__summary_model)
+        editor_result = editor_crew.kickoff(inputs={"topic": json.dumps(editor_news)})
+        
+        plan_data = editor_result.pydantic
+        selected_ids = getattr(plan_data, "selected_paper_ids", [])
+        table_of_contents = getattr(plan_data, "table_of_contents", "")
+
+        # 2. Filter news to only include full content for selected articles
+        selected_news = []
+        for item in news:
+            if item.get("paperId") in selected_ids:
+                selected_news.append(item)
+
+        # Fallback if no valid selection was returned
+        if not selected_news:
+            selected_news = news[:3]
 
         # Build media map from selected articles
         self.__media_map = {}
-        for item in news:
+        for item in selected_news:
             for m in item.get("media", []):
                 self.__media_map[m["id"]] = m["url"]
 
-        redaction_crew = build_redaction_crew(interest=self.__interest, model_name=self.__model)
+        # 3. Run Redaction Crew (using writer model and selected news with full content)
+        redaction_crew = build_redaction_crew(
+            interest=self.__interest,
+            writer_model=self.__writer_model,
+            summary_model=self.__summary_model
+        )
 
-        result = redaction_crew.kickoff(inputs={"topic": json.dumps(news)})
+        result = redaction_crew.kickoff(inputs={
+            "topic": json.dumps(selected_news),
+            "plan": table_of_contents
+        })
 
         self.__result = result.json_dict
         return result

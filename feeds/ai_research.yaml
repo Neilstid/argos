@@ -25,6 +25,6 @@ sources:
 
 interest: Artificial Intelligence (new models, new technologies, new tools, new startups, new trending github repo) and data science (new framework, methods, updates). You like very much computer vision and NLP subject in particular.
 
-model: mistral/mistral-medium-latest
-
+summary_model: mistral/ministral-3b-2512
+writer_model: mistral/mistral-medium-latest
 time_limit: 1
