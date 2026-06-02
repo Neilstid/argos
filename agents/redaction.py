@@ -26,8 +26,8 @@ def build_redaction_crew(
 
     plan_task = Task(
         description="""
-        Here are sources from today feeds. Pick some that most fits to your blog's readers interest. 
-        Then write a blog article based on your selected sources.
+        Here are sources from today feeds. Pick some sources (3/4 subjects) that most fits to your blog's readers interest. 
+        Then create an attractive blog plan based on these selected sources
 
         # News
         {topic}
@@ -44,6 +44,10 @@ def build_redaction_crew(
         write a blog post content, with a title, a summary and tags. 
         You can fact check informations with the fact checker.
 
+        DO NOT:
+         - Include incitations to follow a newsletter (there is none)
+         - Include incitations to follow social networks (there is none)
+
         # News
         {topic}
         """,
@@ -58,7 +62,8 @@ def build_redaction_crew(
         """,
         agent=writer,
         output_json=Article,
-        response_model=Article
+        response_model=Article,
+        context=[plan_task]
     )
 
     redaction_crew = Crew(
