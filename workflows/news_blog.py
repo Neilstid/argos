@@ -66,7 +66,7 @@ date: {date_str}
 math: true
 authors:
   - admin
-tags:\n\t- {'\n\t- '.join(article["tags"])}
+tags:\n  - {'\n  - '.join(article["tags"])}
 image:
   caption: 'Embed rich media such as videos and LaTeX math'
 ---
