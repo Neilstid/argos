@@ -121,4 +121,4 @@ def map_and_reduce(articles: List[dict], interest: str, model_name: str = "mistr
     mapped_articles = map_articles(articles=articles, model_name=model_name)
     reduced_articles = reduce_articles(articles=mapped_articles, interest=interest, model_name=model_name)
 
-    return keep_key(reduced_articles, ["title", "content"])
+    return keep_key(reduced_articles, ["title", "content", "media"])

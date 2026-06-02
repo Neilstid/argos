@@ -36,6 +36,7 @@ def build_writer_agent(
             - Include expert quotes
             - Maintain factual accuracy
             - Include useful links to trace your affirmations
+            - Check each source topic for a list of media elements under the key "media". If present, you may include relevant images in your content using the exact format: ![Custom Caption](media-uuid), referencing the provided media ID (e.g. ![A beautiful chart](media-a1b2c3d4)). Do not invent new IDs. Only reference IDs present in the source media lists.
         4. Digital Optimization
             - Structure for scanability
             - Include shareable takeaways

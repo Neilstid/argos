@@ -14,7 +14,8 @@ from dateutil.parser import ParserError, parser
 from uuid import uuid4
 from typing import List, Dict, Any, Optional, Union
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
+from bs4 import BeautifulSoup
 
 from utils.date import days_ago
 from utils.exceptions import SourceValidationError
@@ -89,6 +90,59 @@ class BlogCollector:
             return None
 
     @staticmethod
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((Exception,)),
+        reraise=False
+    )
+    def fetch_content_and_media(url: str) -> tuple[Optional[str], List[Dict[str, Any]]]:
+        try:
+            html_content = fetch_url(url)
+            if not html_content:
+                return None, []
+            
+            content = extract(html_content)
+            media = []
+            seen_urls = set()
+            soup = BeautifulSoup(html_content, "html.parser")
+            
+            for img in soup.find_all("img"):
+                src = img.get("src")
+                if not src:
+                    continue
+                
+                # Resolve relative URL to absolute
+                absolute_src = urljoin(url, src)
+                if absolute_src in seen_urls:
+                    continue
+                
+                # Skip layout, tracking pixels, logos, avatars, icons
+                src_lower = absolute_src.lower()
+                if any(term in src_lower for term in ["avatar", "logo", "icon", "spinner", "pixel", "tracker", "wp-emoji", "/ad/"]):
+                    continue
+                if absolute_src.startswith("data:"):
+                    continue
+                
+                alt = img.get("alt", "").strip()
+                title = img.get("title", "").strip()
+                desc = alt or title or "Article image"
+                
+                # Generate unique ID for this media
+                media_id = f"media-{uuid4().hex[:8]}"
+                
+                media.append({
+                    "id": media_id,
+                    "url": absolute_src,
+                    "description": desc
+                })
+                seen_urls.add(absolute_src)
+                
+            return content, media
+        except Exception:
+            return None, []
+
+    @staticmethod
     def process_feed(feed_url: str, limit_per_source: int = -1, time_limit: Union[int, datetime] = 7) -> List[Dict[str, Any]]:
         """
         Parse an RSS feed URL and return a list of cleaned article dicts.
@@ -107,12 +161,14 @@ class BlogCollector:
             limited_feed = []
 
             for i, entry in enumerate(feed.entries):
+                content, media = BlogCollector.fetch_content_and_media(getattr(entry, 'link', ""))
                 entry_safe_dict = {
                     "paperId": str(uuid4()),
                     "title": BlogCollector.remove_html(getattr(entry, 'title', "")),
                     "abstract": BlogCollector.remove_html(getattr(entry, 'description', "")),
                     "link": getattr(entry, 'link', ""),
-                    "content": BlogCollector.fetch_content(getattr(entry, 'link', "")),
+                    "content": content,
+                    "media": media,
                     "timestamp": BlogCollector.get_published_date(entry),
                     "publishedDate": BlogCollector.get_published_date(entry, format='%Y-%m-%dT%H:%M:%SZ'),
                     "source": getattr(feed.feed, 'title', None) if hasattr(feed, 'feed') else None,
