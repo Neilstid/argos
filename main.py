@@ -18,7 +18,7 @@ def write_blog(
 
     tw = NewsBlogWorkflow()
     tw.build(config)
-    tw.run(1)
+    tw.run()
     tw.format(output)
 
 if __name__ == '__main__':

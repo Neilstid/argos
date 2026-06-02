@@ -34,6 +34,7 @@ class NewsBlogWorkflow:
 
         self.__interest = config.get("interest", "")
         self.__model = config.get("model", "mistral/mistral-medium-latest")
+        self.__time_limit = config.get("time_limit", 1)
 
 
     def add_feed(self, url: str):
@@ -42,8 +43,10 @@ class NewsBlogWorkflow:
 
     def run(
         self,
-        time_limit: Union[int, datetime] = 1,
+        time_limit: Union[int, datetime] = None,
     ):
+        time_limit if not time_limit is None else self.__time_limit
+
         news = self.__feed_reader.collect(time_limit=time_limit)
         news = map_and_reduce(news, interest=self.__interest, model_name=self.__model)
 
