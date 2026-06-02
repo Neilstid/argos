@@ -126,7 +126,11 @@ class BlogCollector:
                 
                 alt = img.get("alt", "").strip()
                 title = img.get("title", "").strip()
-                desc = alt or title or "Article image"
+                if alt == "" and title == "":
+                    continue
+                
+                # Get the image description
+                desc = alt or title
                 
                 # Generate unique ID for this media
                 media_id = f"media-{uuid4().hex[:8]}"
