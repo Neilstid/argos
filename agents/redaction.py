@@ -64,17 +64,30 @@ def build_redaction_crew(
 
     redaction_task = Task(
         description="""
-        Base only on the following table of contents and the following news, 
-        write a blog post content, with a title, a summary and tags. 
+        Based on the following table of contents and the following news, 
+        write a comprehensive, high-quality blog post.
         You can fact check information with the fact checker.
 
-        Using the table of content:
-         - Define sub-parts of the table of content. 
-         - You have to write 2 to 5 paragraphs per subject chose. These paragraphs should coontain the context, the explanations and why it matters.
+        The blog post `content` field must be written in Markdown and follow this PREMIUM HYBRID LAYOUT:
+
+        1. **Executive Summary / TL;DR**:
+           - Start the content with a blockquote callout. Use `> 💡 **TL;DR:** ` followed by a 2-3 sentence high-level executive summary of the main news covered.
+
+        2. **Key Highlights Table**:
+           - Immediately below the TL;DR, include a 2-column Markdown table summarizing key metrics, insights, or innovations.
+           - Use the headers: `| Metric / Innovation Area | Insight / Takeaway |`.
+
+        3. **Structured Section Breakdowns**:
+           - Use `###` headings for each topic/subject from the table of contents.
+           - For each topic, write 2 to 5 paragraphs covering: Context/Background, Tech/Innovation Explanation, and Why It Matters/Future Outlook.
+           - Dynamically integrate rich technical elements:
+             - **Mermaid diagrams**: Use a ` ```mermaid ` block (e.g. flowchart TD or sequenceDiagram) to visually explain a concept, architecture, or workflow. Ensure Mermaid syntax is valid.
+             - **LaTeX Math notation**: Use `$ ... $` for inline math or `$$ ... $$` for standalone equations if describing formulas, objective functions, or neural architecture layers.
+             - **Structured Code blocks**: If a tool, library, or repository is discussed, provide clean code snippets.
 
         DO NOT:
-         - Include incitations to follow a newsletter (there is none)
-         - Include incitations to follow social networks (there is none)
+         - Include incitations to follow a newsletter (there is none).
+         - Include incitations to follow social networks (there is none).
 
         # Table of Contents
         {plan}
