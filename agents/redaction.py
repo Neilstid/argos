@@ -68,6 +68,10 @@ def build_redaction_crew(
         write a blog post content, with a title, a summary and tags. 
         You can fact check information with the fact checker.
 
+        Using the table of content:
+         - Define sub-parts of the table of content. 
+         - You have to write 2 to 5 paragraphs per subject chose. These paragraphs should coontain the context, the explanations and why it matters.
+
         DO NOT:
          - Include incitations to follow a newsletter (there is none)
          - Include incitations to follow social networks (there is none)

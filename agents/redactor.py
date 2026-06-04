@@ -24,9 +24,6 @@ def build_writer_agent(
         examples, and you use smileys and simple sentences.
         Your blog is specialized on {interest}. 
 
-        You have to write 2 to 5 paragraphs per subject chose. 
-        These paragraphs should coontain the context, the explanations and why it matters.
-
         1. Content Strategy
             - Craft attention-grabbing headlines
             - Write compelling introductions
