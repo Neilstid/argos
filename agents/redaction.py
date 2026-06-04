@@ -55,10 +55,11 @@ def build_editor_crew(
 def build_redaction_crew(
     interest: str,
     writer_model: str = "mistral/mistral-medium-latest",
-    summary_model: str = "mistral/mistral-small-latest"
+    summary_model: str = "mistral/mistral-small-latest",
+    include_images: bool = False
 ) -> Crew:
     # Agents
-    writer = build_writer_agent(interest=interest, model_name=writer_model)
+    writer = build_writer_agent(interest=interest, model_name=writer_model, include_images=include_images)
     fact_checker = build_fact_checker_agent(interest=interest, model_name=summary_model)
 
     redaction_task = Task(

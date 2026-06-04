@@ -56,7 +56,7 @@ class BlogCollector:
         self.sources.pop(index)
 
 
-    def collect(self, time_limit: int = 7) -> List[Dict[str, Any]]:
+    def collect(self, time_limit: int = 7, include_images: bool = False) -> List[Dict[str, Any]]:
         """
         Collect recent articles from all configured sources.
 
@@ -64,13 +64,15 @@ class BlogCollector:
         :type limit_per_source: int, optional
         :param time_limit: Number of days to look back, defaults to 7
         :type time_limit: int, optional
+        :param include_images: Whether to include images from the articles
+        :type include_images: bool, optional
         :return: List of article metadata dicts
         :rtype: List[Dict[str, Any]]
         """
         all_articles: List[Dict[str, Any]] = []
         limit_per_source = 5  # Default limit per source
         for source in self.sources:
-            entries = self.process_feed(source, limit_per_source=limit_per_source, time_limit=time_limit)
+            entries = self.process_feed(source, limit_per_source=limit_per_source, time_limit=time_limit, include_images=include_images)
             all_articles.extend(entries)
 
         return all_articles
@@ -217,7 +219,7 @@ class BlogCollector:
             return None, []
 
     @staticmethod
-    def process_feed(feed_url: str, limit_per_source: int = -1, time_limit: Union[int, datetime] = 7) -> List[Dict[str, Any]]:
+    def process_feed(feed_url: str, limit_per_source: int = -1, time_limit: Union[int, datetime] = 7, include_images: bool = False) -> List[Dict[str, Any]]:
         """
         Parse an RSS feed URL and return a list of cleaned article dicts.
 
@@ -227,6 +229,8 @@ class BlogCollector:
         :type limit_per_source: int, optional
         :param time_limit: Days to look back or date limit for published articles, defaults to 7
         :type time_limit: int, optional
+        :param include_images: Whether to parse and include image media
+        :type include_images: bool, optional
         :return: List of article dicts
         :rtype: List[Dict[str, Any]]
         """
@@ -235,7 +239,11 @@ class BlogCollector:
             limited_feed = []
 
             for i, entry in enumerate(feed.entries):
-                content, media = BlogCollector.fetch_content_and_media(getattr(entry, 'link', ""))
+                if include_images:
+                    content, media = BlogCollector.fetch_content_and_media(getattr(entry, 'link', ""))
+                else:
+                    content = BlogCollector.fetch_content(getattr(entry, 'link', ""))
+                    media = []
                 entry_safe_dict = {
                     "paperId": str(uuid4()),
                     "title": BlogCollector.remove_html(getattr(entry, 'title', "")),
