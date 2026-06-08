@@ -1,0 +1,70 @@
+[
+  {
+    "paperId": "mock-paper-001",
+    "title": "Mistral Large 2: A New Benchmark for Open Weights",
+    "abstract": "Mistral AI releases Mistral Large 2, a 123B parameter model with 128k context window. It excels at coding, mathematics, and multilingual tasks.",
+    "link": "https://mistral.ai/news/mistral-large-2/",
+    "content": "Mistral AI has announced the release of Mistral Large 2, a state-of-the-art open-weights language model. With 123 billion parameters, Mistral Large 2 is designed for high-performance reasoning, coding, and multilingual tasks. It features a 128k context window and support for dozens of languages. In coding benchmarks, it achieves parity with leading proprietary models. The model is released under the Mistral Research License for research and non-commercial usage, and commercial licenses are available. Its loading format supports transformers: `from transformers import AutoModelForCausalLM; model = AutoModelForCausalLM.from_pretrained('mistralai/Mistral-Large-Instruct-2407')`.",
+    "media": [
+      {
+        "id": "media-mistral-benchmark",
+        "url": "https://mistral.ai/images/news/mistral-large-2-chart.png",
+        "description": "Benchmark chart of Mistral Large 2 compared to Llama 3 70B and GPT-4o."
+      }
+    ],
+    "timestamp": 1721779200,
+    "publishedDate": "2024-07-24T00:00:00Z",
+    "source": "Mistral AI News",
+    "language": "en",
+    "authors": "Mistral Team",
+    "type": "url"
+  },
+  {
+    "paperId": "mock-paper-002",
+    "title": "FlashAttention-3: Fast and Accurate Attention with Asynchrony",
+    "abstract": "Researchers introduce FlashAttention-3, which speeds up attention computation on Hopper GPUs by 1.5-2x. It exploits asynchronous GPU instructions.",
+    "link": "https://arxiv.org/abs/2407.00001",
+    "content": "FlashAttention-3 has been released, introducing significant speedups for training and inference of Transformer models on NVIDIA H100 (Hopper) GPUs. By exploiting GPU tensor cores and asynchronous memory copy instructions, FlashAttention-3 achieves up to 75% of theoretical GPU FLOPS. The mathematical formula for scaled dot-product attention is defined as: $$A = \\text{softmax}\\left(\\frac{Q K^T}{\\sqrt{d_k}}\\right) V$$. The paper introduces techniques like block-sparse attention and fp8 execution. We show that memory-bound bottlenecks are eliminated.",
+    "media": [
+      {
+        "id": "media-flashattention-speedup",
+        "url": "https://github.com/Dao-AILab/flash-attention/raw/main/assets/flash3_speedup.png",
+        "description": "Speed comparison of FlashAttention-3 vs FlashAttention-2."
+      }
+    ],
+    "timestamp": 1721692800,
+    "publishedDate": "2024-07-23T00:00:00Z",
+    "source": "Arxiv AI Blog",
+    "language": "en",
+    "authors": "Tri Dao",
+    "type": "url"
+  },
+  {
+    "paperId": "mock-paper-003",
+    "title": "Llama 3.1: Expanding Context and Multilingual capabilities",
+    "abstract": "Meta releases Llama 3.1 405B, 70B, and 8B models. It supports 128k context, tool use, and improved reasoning.",
+    "link": "https://ai.meta.com/blog/meta-llama-3-1/",
+    "content": "Meta has launched Llama 3.1, a major upgrade to the Llama 3 family. The release includes the highly anticipated 405B parameter model, along with updated versions of the 70B and 8B models. All models now support a 128k token context window, advanced tool calling capabilities, and multilingual support across 8 languages. The training process utilized a synthetic data generation pipeline to align the model. The model license allows developers to use outputs to train other models, marking a major milestone for open-weights AI development.",
+    "media": [],
+    "timestamp": 1721779200,
+    "publishedDate": "2024-07-24T00:00:00Z",
+    "source": "Meta AI Blog",
+    "language": "en",
+    "authors": "Meta AI Team",
+    "type": "url"
+  },
+  {
+    "paperId": "mock-paper-004",
+    "title": "Dolly: The Open Source LLM democratizing instruction tuning",
+    "abstract": "Databricks releases Dolly, an instruction-tuned model trained on high-quality human-generated data.",
+    "link": "https://www.databricks.com/blog/2023/04/12/dolly-first-open-commercially-viable-instruction-tuned-llm",
+    "content": "Databricks has open sourced Dolly, an instruction-tuned language model based on EleutherAI's Pythia model family. Dolly was trained on 15,000 high-quality human-generated instruction-response pairs, showing that even relatively small models (12B parameters) can exhibit excellent instruction-following behavior when trained on clean data. It is licensed for commercial use and serves as a blueprint for organizations wanting to build their own custom LLMs safely.",
+    "media": [],
+    "timestamp": 1681257600,
+    "publishedDate": "2023-04-12T00:00:00Z",
+    "source": "Databricks Blog",
+    "language": "en",
+    "authors": "Databricks Team",
+    "type": "url"
+  }
+]
