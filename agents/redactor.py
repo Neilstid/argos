@@ -43,6 +43,11 @@ def build_writer_agent(
             - Structure for scanability using descriptive subheadings.
             - Include shareable takeaways and clear section summaries.
             - Optimize for SEO naturally without keyword stuffing.
+
+        
+        STRICT FORMATTING REQUIREMENTS:
+            1. Return ONLY a valid JSON object.
+            2. **Do NOT include any line breaks (\\n), carriage returns (\\r), or tabs (\\t) outside of string values.**
         """,
         max_iter=2,
         verbose=True,

@@ -60,7 +60,7 @@ def build_redaction_crew(
 ) -> Crew:
     # Agents
     writer = build_writer_agent(interest=interest, model_name=writer_model, include_images=include_images)
-    fact_checker = build_fact_checker_agent(interest=interest, model_name=summary_model)
+    # fact_checker = build_fact_checker_agent(interest=interest, model_name=writer_model)
 
     redaction_task = Task(
         description="""
@@ -95,22 +95,19 @@ def build_redaction_crew(
         # News
         {topic}
         """,
-        expected_output="""
-        An attractive blog post content, with a title, a summary and tags.
-
-        STRICT FORMATTING REQUIREMENTS:
-            1. Return ONLY a valid JSON object.
-            2. **Do NOT include any line breaks (\\n), carriage returns (\\r), or tabs (\\t) outside of string values.**
-            3. Never start your response with introductory text (“Here is the JSON:”) and do not end it with a conclusion. Start directly with ‘{’ and end with ‘}’.
+        expected_output=r"""
+        A valid JSON object matching the Article schema. 
+        Crucial: The 'content' field contains markdown. You must strictly escape  all newlines as '\\\\n'. 
+        
+        **Do not output any raw control characters (\n, \t, \\n, \\t)**, and do not mix terminal output commands within the JSON string.
         """,
         agent=writer,
-        output_json=Article,
-        response_model=Article,
+        output_json=Article
     )
 
     redaction_crew = Crew(
         manager_llm=writer_model,
-        agents=[writer, fact_checker],
+        agents=[writer],
         process=Process.sequential,
         verbose=True,
         tasks=[redaction_task],

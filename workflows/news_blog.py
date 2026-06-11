@@ -225,7 +225,7 @@ authors:
 tags:\n  - {'\n  - '.join(article["tags"])}
 {image_frontmatter}---
 
-{article["content"] if 'content' in article.keys() else str(article)}
+{article["content"].replace(r"\\n", "\n") if 'content' in article.keys() else str(article)}
 
 Written with [Argos](https://github.com/Neilstid/argos)"""
 
