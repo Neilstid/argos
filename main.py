@@ -12,6 +12,17 @@ def write_blog(
     output: str,
     include_images: bool
 ):
+    """Generate and write the news blog.
+
+    :param config: Path to the configuration file (e.g. in feeds folder)
+    :type config: str
+    :param output: Blog post saving path
+    :type output: str
+    :param include_images: Include or exclude images/media in the blog post, defaults to None
+    :type include_images: bool, optional
+    :return: None
+    :rtype: None
+    """
     # Formatted output path
     data = {
         "date": datetime.now().strftime("%Y-%m-%d")

@@ -9,5 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
+# Compiled doc
+./docs/build/*
+
 # Secrets
 .env

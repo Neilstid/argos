@@ -29,6 +29,11 @@ class BlogCollector:
     """
 
     def __init__(self):
+        """Initialize the BlogCollector.
+
+        :return: None
+        :rtype: None
+        """
         super().__init__()
         self.sources = []
 
@@ -53,6 +58,13 @@ class BlogCollector:
         self.sources.append(source)
 
     def remove_source(self, index: int):
+        """Remove a source from the collector by index.
+
+        :param index: Index of the source to remove
+        :type index: int
+        :return: None
+        :rtype: None
+        """
         self.sources.pop(index)
 
 
@@ -86,6 +98,13 @@ class BlogCollector:
         reraise=False
     )
     def fetch_content(url: str) -> Optional[str]:
+        """Fetch content from an URL.
+
+        :param url: URL to fetch
+        :type url: str
+        :return: Fetched content
+        :rtype: Optional[str]
+        """
         try:
             return extract(fetch_url(url))
         except Exception:
@@ -99,6 +118,13 @@ class BlogCollector:
         reraise=False
     )
     def fetch_content_and_media(url: str) -> tuple[Optional[str], List[Dict[str, Any]]]:
+        """Fetch content and media from an URL.
+
+        :param url: URL to fetch
+        :type url: str
+        :return: Tuple of content and media
+        :rtype: tuple[Optional[str], List[Dict[str, Any]]]
+        """
         try:
             html_content = fetch_url(url)
             if not html_content:

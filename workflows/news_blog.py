@@ -20,6 +20,11 @@ class NewsBlogWorkflow:
     """
 
     def __init__(self):
+        """Initialize the NewsBlogWorkflow.
+
+        :return: None
+        :rtype: None
+        """
         self.__feed_reader = BlogCollector()
         self.__interest = ""
         self.__result = None
@@ -28,6 +33,13 @@ class NewsBlogWorkflow:
 
 
     def build(self, config_path: str):
+        """Build the workflow configuration from a file.
+
+        :param config_path: Path to the configuration yaml file
+        :type config_path: str
+        :return: None
+        :rtype: None
+        """
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
 
@@ -42,6 +54,13 @@ class NewsBlogWorkflow:
 
 
     def add_feed(self, url: str):
+        """Add a feed to the workflow.
+
+        :param url: URL of the feed
+        :type url: str
+        :return: None
+        :rtype: None
+        """
         self.__feed_reader.add_source(url)
 
 
@@ -50,6 +69,15 @@ class NewsBlogWorkflow:
         time_limit: Union[int, datetime] = None,
         include_images: Optional[bool] = None,
     ):
+        """Run the workflow to collect, map and reduce articles.
+
+        :param time_limit: Time limit for fetching articles, defaults to None
+        :type time_limit: Union[int, datetime], optional
+        :param include_images: Whether to include images in the output, defaults to None
+        :type include_images: Optional[bool], optional
+        :return: The generated blog post result
+        :rtype: Any
+        """
         # Get the correct time limit
         time_limit = time_limit if not time_limit is None else self.__time_limit
 
@@ -65,9 +93,9 @@ class NewsBlogWorkflow:
         editor_crew = build_editor_crew(interest=self.__interest, model_name=self.__summary_model)
         editor_result = editor_crew.kickoff(inputs={"topic": json.dumps(editor_news)})
         
-        plan_data = editor_result.pydantic
-        selected_ids = getattr(plan_data, "selected_paper_ids", [])
-        table_of_contents = getattr(plan_data, "table_of_contents", "")
+        plan_data = editor_result.json_dict
+        selected_ids = plan_data.get("selected_paper_ids", [])
+        table_of_contents = plan_data.get("table_of_contents", "")
 
         # 2. Filter news to only include full content for selected articles
         selected_news = []
@@ -104,6 +132,17 @@ class NewsBlogWorkflow:
 
 
     def _download_media(self, url: str, output_dir: str, media_id: str) -> Optional[str]:
+        """Download media from an URL.
+
+        :param url: Media URL
+        :type url: str
+        :param output_dir: Directory to save the media
+        :type output_dir: str
+        :param media_id: Unique identifier for the media
+        :type media_id: str
+        :return: Path to the downloaded media or None
+        :rtype: Optional[str]
+        """
         import urllib.request
         import mimetypes
         import os
@@ -139,6 +178,13 @@ class NewsBlogWorkflow:
 
 
     def format(self, output_path: str = None):
+        """Format the generated result as a Markdown string and save it.
+
+        :param output_path: Path to save the Markdown file, defaults to None
+        :type output_path: str, optional
+        :return: Formatted Markdown string if output_path is None, else None
+        :rtype: Union[str, None]
+        """
         import re
         import os
 

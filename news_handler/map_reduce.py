@@ -18,6 +18,15 @@ class Reduced(BaseModel):
 
 
 def split_on_key(articles: List[dict], key: str):
+    """Split articles into two lists based on the presence of a key.
+
+    :param articles: List of articles
+    :type articles: List[dict]
+    :param key: Key to split on
+    :type key: str
+    :return: A tuple of two lists (has_key, has_not_key)
+    :rtype: tuple
+    """
     has, has_not = [], []
 
     for art in articles:
@@ -30,6 +39,17 @@ def split_on_key(articles: List[dict], key: str):
 
 
 def find_with_key_value(articles: List[dict], key: str, value: str):
+    """Find an article with a specific key and value.
+
+    :param articles: List of articles
+    :type articles: List[dict]
+    :param key: Key to search
+    :type key: str
+    :param value: Value to match
+    :type value: str
+    :return: The matching article or None
+    :rtype: dict
+    """
     for art in articles:
         if art[key] == value:
             return art
@@ -37,6 +57,15 @@ def find_with_key_value(articles: List[dict], key: str, value: str):
 
 
 def keep_key(articles: List[dict], keys: List[str]):
+    """Keep only specific keys in the articles.
+
+    :param articles: List of articles
+    :type articles: List[dict]
+    :param keys: List of keys to keep
+    :type keys: List[str]
+    :return: List of filtered articles
+    :rtype: List[dict]
+    """
     result = []
     for art in articles:
         result.append({k: art[k] for k in keys if k in art})
@@ -48,6 +77,17 @@ def map_articles(
     batch_size: int = 5,
     model_name: str = "mistral/mistral-medium-latest",
 ) -> List[dict]:
+    """Map articles to their summaries.
+
+    :param articles: List of articles to summarize
+    :type articles: List[dict]
+    :param batch_size: Number of articles to process in a batch, defaults to 5
+    :type batch_size: int, optional
+    :param model_name: Name of the model to use, defaults to "mistral/mistral-medium-latest"
+    :type model_name: str, optional
+    :return: List of mapped articles
+    :rtype: List[dict]
+    """
     result, to_map = split_on_key(articles, "abstract")
 
     mapper = Agent(
@@ -88,6 +128,21 @@ def reduce_articles(
     max_article: int = 15,
     model_name: str = "mistral/mistral-medium-latest"
 ):
+    """Reduce mapped articles by selecting the most relevant ones.
+
+    :param articles: List of mapped articles
+    :type articles: List[dict]
+    :param interest: Topic of interest
+    :type interest: str
+    :param min_article: Minimum number of articles to select, defaults to 5
+    :type min_article: int, optional
+    :param max_article: Maximum number of articles to select, defaults to 15
+    :type max_article: int, optional
+    :param model_name: Name of the model to use, defaults to "mistral/mistral-medium-latest"
+    :type model_name: str, optional
+    :return: List of reduced articles
+    :rtype: List[dict]
+    """
     reducer = Agent(
         role="Article Selector",
         goal=f"Select at least {min_article} and at most {max_article} articles by giving their paperId",
@@ -118,6 +173,17 @@ def reduce_articles(
 
 
 def map_and_reduce(articles: List[dict], interest: str, model_name: str = "mistral/mistral-medium-latest"):
+    """Map and reduce articles.
+
+    :param articles: List of articles
+    :type articles: List[dict]
+    :param interest: Topic of interest
+    :type interest: str
+    :param model_name: Name of the model to use, defaults to "mistral/mistral-medium-latest"
+    :type model_name: str, optional
+    :return: List of fully processed articles
+    :rtype: List[dict]
+    """
     mapped_articles = map_articles(articles=articles, model_name=model_name)
     reduced_articles = reduce_articles(articles=mapped_articles, interest=interest, model_name=model_name)
 
