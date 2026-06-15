@@ -53,6 +53,18 @@ python main.py --config feeds/ai_research.yaml --output "blog_posts/news_{date}.
 - `--output`: Path where the generated blog post will be saved. You can use `{date}` to automatically include the current date in the filename (e.g., `output_{date}.md`). Must be a `.md` file.
 - `--include-images` / `--no-include-images`: Flag to include or exclude images/media in the generated blog post (defaults to False).
 
+### Tracing and Monitoring
+
+Argos integrates with [MLflow](https://mlflow.org/) to provide tracing for the underlying CrewAI agents. When you run `main.py`, traces and agent events are automatically logged to a local MLflow experiment named `argos-news-blog`.
+
+To view these traces, launch the MLflow UI:
+
+```bash
+uv run mlflow ui
+```
+
+Then navigate to `http://localhost:5000` in your web browser.
+
 ## Project Structure
 
 - `main.py`: The entry point script to run the blog generator.

@@ -2,6 +2,7 @@ from workflows.news_blog import NewsBlogWorkflow
 import click
 from datetime import datetime
 from dotenv import load_dotenv
+import mlflow
 
 @click.command()
 @click.option('--config', type=click.Path(), help='Path to the configuration file (hint: check in feeds folder). Configuration file must be in .yaml format.')
@@ -41,4 +42,6 @@ def write_blog(
 
 if __name__ == '__main__':
     load_dotenv()
+    mlflow.set_experiment("argos-news-blog")
+    mlflow.crewai.autolog()
     write_blog()
