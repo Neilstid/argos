@@ -7,6 +7,7 @@ def build_writer_agent(
     interest: str,
     model_name: str = "mistral/mistral-medium-latest",
     include_images: bool = False,
+    allow_delgation: bool = False
 ) -> Agent:
     
     media_instruction = (
@@ -51,7 +52,7 @@ def build_writer_agent(
         """,
         max_iter=2,
         verbose=True,
-        allow_delegation=False,
+        allow_delegation=allow_delgation,
         llm=model_name,
         response_format=Article
     )

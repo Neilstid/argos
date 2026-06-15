@@ -68,6 +68,7 @@ class NewsBlogWorkflow:
         self,
         time_limit: Union[int, datetime] = None,
         include_images: Optional[bool] = None,
+        fact_check: Optional[bool] = None,
     ):
         """Run the workflow to collect, map and reduce articles.
 
@@ -119,7 +120,8 @@ class NewsBlogWorkflow:
             interest=self.__interest,
             writer_model=self.__writer_model,
             summary_model=self.__summary_model,
-            include_images=self.__include_images
+            include_images=self.__include_images,
+            fact_check=fact_check
         )
 
         result = redaction_crew.kickoff(inputs={

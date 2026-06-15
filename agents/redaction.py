@@ -56,11 +56,17 @@ def build_redaction_crew(
     interest: str,
     writer_model: str = "mistral/mistral-medium-latest",
     summary_model: str = "mistral/mistral-small-latest",
-    include_images: bool = False
+    include_images: bool = False,
+    fact_check: bool = False
 ) -> Crew:
     # Agents
-    writer = build_writer_agent(interest=interest, model_name=writer_model, include_images=include_images)
-    # fact_checker = build_fact_checker_agent(interest=interest, model_name=writer_model)
+    writer = build_writer_agent(
+        interest=interest, 
+        model_name=writer_model, 
+        include_images=include_images,
+        allow_delgation=not fact_check
+    )
+    fact_checker = build_fact_checker_agent(interest=interest, model_name=summary_model)
 
     redaction_task = Task(
         description="""
@@ -105,9 +111,16 @@ def build_redaction_crew(
         output_json=Article
     )
 
+    # Agents list
+    agents = [writer]
+
+    # Does it need fact checking
+    if fact_check:
+        agents.append(fact_checker)
+
     redaction_crew = Crew(
         manager_llm=writer_model,
-        agents=[writer],
+        agents=agents,
         process=Process.sequential,
         verbose=True,
         tasks=[redaction_task],
