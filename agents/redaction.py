@@ -34,7 +34,10 @@ def build_editor_crew(
         {topic}
         """,
         expected_output="""
-        Provide a structured table of contents/outline and the list of selected paperIds.
+        A valid JSON object matching the BlogPlan schema. 
+        Crucial: The 'table_of_contents' field contains markdown. You must strictly escape  all newlines as '\\\\n'. 
+        
+        **Do not output any raw control characters (\n, \t, \\n, \\t)**, and do not mix terminal output commands within the JSON string.
         """,
         agent=editor,
         output_json=BlogPlan,
