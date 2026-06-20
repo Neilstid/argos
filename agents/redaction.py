@@ -38,6 +38,7 @@ def build_editor_crew(
         Crucial: The 'table_of_contents' field contains markdown. You must strictly escape  all newlines as '\\\\n'. 
         
         **Do not output any raw control characters (\n, \t, \\n, \\t)**, and do not mix terminal output commands within the JSON string.
+        If you have to use quotation marks (\") use a backslash before, like this \\"
         """,
         agent=editor,
         output_json=BlogPlan,
@@ -111,7 +112,7 @@ def build_redaction_crew(
         **Do not output any raw control characters (\n, \t, \\n, \\t)**, and do not mix terminal output commands within the JSON string.
         """,
         agent=writer,
-        output_json=Article
+        output_pydantic=Article
     )
 
     # Agents list

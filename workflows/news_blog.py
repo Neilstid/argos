@@ -6,6 +6,7 @@ from typing import Union, Optional
 import yaml
 from crewai import Crew
 
+from agents.models.article import Article
 from agents.redaction import build_redaction_crew, build_editor_crew
 from news_handler.map_reduce import map_and_reduce, keep_key
 from tools.rss_feed import BlogCollector
@@ -27,7 +28,7 @@ class NewsBlogWorkflow:
         """
         self.__feed_reader = BlogCollector()
         self.__interest = ""
-        self.__result = None
+        self.__result: Article = None
         self.__media_map = {}
         self.__include_images = False
 
@@ -69,7 +70,7 @@ class NewsBlogWorkflow:
         time_limit: Union[int, datetime] = None,
         include_images: Optional[bool] = None,
         fact_check: Optional[bool] = None,
-    ):
+    ) -> Article:
         """Run the workflow to collect, map and reduce articles.
 
         :param time_limit: Time limit for fetching articles, defaults to None
@@ -129,7 +130,7 @@ class NewsBlogWorkflow:
             "plan": table_of_contents
         })
 
-        self.__result = result.json_dict
+        self.__result: Article = result.pydantic
         return result
 
 
@@ -190,15 +191,15 @@ class NewsBlogWorkflow:
         import re
         import os
 
-        article = self.__result
+        article: Article = self.__result
 
         # Post-process content to download referenced media and replace with relative paths
-        if self.__include_images and output_path and article and "content" in article:
+        if self.__include_images and output_path and article and article.content:
             output_dir = os.path.dirname(output_path) or "."
             if output_dir and not os.path.exists(output_dir):
                 os.makedirs(output_dir, exist_ok=True)
 
-            media_ids = re.findall(r"media-[0-9a-fA-F]+", article["content"])
+            media_ids = re.findall(r"media-[0-9a-fA-F]+", article.content)
             media_ids = list(set(media_ids))
 
             for m_id in media_ids:
@@ -206,9 +207,9 @@ class NewsBlogWorkflow:
                     url = self.__media_map[m_id]
                     rel_path = self._download_media(url, output_dir, m_id)
                     if rel_path:
-                        article["content"] = article["content"].replace(m_id, rel_path)
+                        article.content = article.content.replace(m_id, rel_path)
                     else:
-                        article["content"] = article["content"].replace(m_id, url)
+                        article.content = article.content.replace(m_id, url)
 
         date_str = datetime.now().strftime("%Y-%m-%d")
 
@@ -218,16 +219,16 @@ class NewsBlogWorkflow:
   caption: 'Embed rich media such as videos and LaTeX math'\n"""
 
         formatted = f"""---
-title: "{article["title"] if 'title' in article.keys() else 'AI News Blog'}"
-summary: "{article["summary"] if 'summary' in article.keys() else ''}"
+title: "{article.title if article.title else 'AI News Blog'}"
+summary: "{article.summary if article.summary else ''}"
 date: {date_str}
 math: true
 authors:
   - admin
-tags:\n  - {'\n  - '.join(article["tags"])}
+tags:\n  - {'\n  - '.join(article.tags)}
 {image_frontmatter}---
 
-{article["content"].replace(r"\\n", "\n") if 'content' in article.keys() else str(article)}
+{article.content.replace("\\n", "\n") if article.content else str(article)}
 
 Written with [Argos](https://github.com/Neilstid/argos)"""
 
