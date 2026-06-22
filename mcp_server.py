@@ -13,7 +13,7 @@ from app.tools.rss_feed import BlogCollector
 from app.tools.rss_finder import rss_finder
 
 # Initialize FastMCP Server
-mcp = FastMCP("Argos RSS Feed Reader")
+mcp = FastMCP("Argos")
 
 
 @mcp.tool
