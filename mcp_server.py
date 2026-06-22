@@ -1,6 +1,14 @@
+"""
+Model Context Protocol (MCP) server for Argos.
+
+Exposes tools to search for, discover, read, and extract information from
+RSS feeds using the `BlogCollector` and helper tools.
+"""
+
 import yaml
 from typing import List, Dict, Any, Optional
 from fastmcp import FastMCP
+from tools.blog_finder import search_blogs_ddg
 from tools.rss_feed import BlogCollector
 from tools.rss_finder import rss_finder
 
@@ -65,7 +73,7 @@ def read_feeds_from_config(
 
 
 @mcp.tool
-def read_feeds_from_config(
+def get_feed_from_url(
     base_url: str,
 ) -> str:
     """
@@ -78,6 +86,32 @@ def read_feeds_from_config(
         str: URL towards the rss feeds of the given website
     """
     return rss_finder(base_url=base_url)
+
+
+@mcp.tool
+def get_feeds_from_subject(
+    suject: str
+) -> List[str]:
+    """
+    Find the rss feeds for a given subject
+
+    Args:
+        base_url (str): Base url to get the rss feed for
+
+    Returns:
+        List[str]: List of URLs towards the rss feeds for the given suject
+    """
+
+    blogs_site = search_blogs_ddg(keywords=suject)
+
+    feeds = []
+    for site in blogs_site:
+        rss = rss_finder(base_url=site)
+
+        if not rss is None:
+            feeds.append(rss)
+
+    return feeds 
 
 
 if __name__ == "__main__":

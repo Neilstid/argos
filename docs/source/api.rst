@@ -13,6 +13,7 @@ This section contains the API documentation for all the internal modules of the 
    seo_expert
    map_reduce
    rss_feed
+   mcp_server
    date
    exceptions
    model
