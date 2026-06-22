@@ -1,11 +1,12 @@
 import yaml
-import json
 from typing import List, Dict, Any, Optional
 from fastmcp import FastMCP
 from tools.rss_feed import BlogCollector
+from tools.rss_finder import rss_finder
 
 # Initialize FastMCP Server
 mcp = FastMCP("Argos RSS Feed Reader")
+
 
 @mcp.tool
 def read_feed(
@@ -28,6 +29,7 @@ def read_feed(
     collector.add_source(url)
     articles = collector.collect(time_limit=time_limit, include_images=include_images)
     return articles
+
 
 @mcp.tool
 def read_feeds_from_config(
@@ -60,6 +62,23 @@ def read_feeds_from_config(
 
     articles = collector.collect(time_limit=resolved_time_limit, include_images=resolved_include_images)
     return articles
+
+
+@mcp.tool
+def read_feeds_from_config(
+    base_url: str,
+) -> str:
+    """
+    Find the rss feed for a given website
+
+    Args:
+        base_url (str): Base url to get the rss feed for
+
+    Returns:
+        str: URL towards the rss feeds of the given website
+    """
+    return rss_finder(base_url=base_url)
+
 
 if __name__ == "__main__":
     mcp.run()

@@ -7,7 +7,6 @@ sources:
  - https://huggingface.co/blog/feed.xml
  - https://machinelearningmastery.com/feed/
  - https://bair.berkeley.edu/blog/feed.xml
- - https://ai.googleblog.com/feeds/posts/default
  - https://blogs.nvidia.com/feed/
  - https://bigdataanalyticsnews.com/category/artificial-intelligence/feed/
  - https://lucumr.pocoo.org/feed.atom
@@ -15,8 +14,6 @@ sources:
  - https://www.theneuron.ai/feed/
  - https://www.bensbites.co/feed
  - https://www.marktechpost.com/feed/
- - https://mistral.ai/news/index.xml
- - https://ai.meta.com/blog/rss/
  - https://towardsdatascience.com/feed/
  - https://techcrunch.com/category/artificial-intelligence/feed/
  - https://venturebeat.com/feed
