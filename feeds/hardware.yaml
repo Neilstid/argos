@@ -1,0 +1,15 @@
+sources:
+ - https://www.comptoir-hardware.com/home.xml
+ - https://www.cowcotland.com/flux.xml
+ - https://www.lesnumeriques.com/informatique/rss.xml
+ - https://www.frandroid.com/categories/hardware/feed
+ - https://www.tomshardware.com/rss.xml
+ - https://www.techpowerup.com/rss/news
+ - https://wccftech.com/category/hardware/feed/
+ - https://feeds.arstechnica.com/arstechnica/gadgets
+
+interest: Hardware (new components, new technologies, ...).
+
+summary_model: mistral/ministral-3b-2512
+writer_model: mistral/mistral-medium-latest
+time_limit: 1
