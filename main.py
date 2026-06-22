@@ -1,4 +1,4 @@
-from workflows.news_blog import NewsBlogWorkflow
+from app.workflows.news_blog import NewsBlogWorkflow
 import click
 from datetime import datetime
 from dotenv import load_dotenv

@@ -6,10 +6,10 @@ from typing import Union, Optional
 import yaml
 from crewai import Crew
 
-from agents.models.article import Article
-from agents.redaction import build_redaction_crew, build_editor_crew
-from news_handler.map_reduce import map_and_reduce, keep_key
-from tools.rss_feed import BlogCollector
+from app.agents.models.article import Article
+from app.agents.redaction import build_redaction_crew, build_editor_crew
+from app.news_handler.map_reduce import map_and_reduce, keep_key
+from app.tools.rss_feed import BlogCollector
 
 
 class NewsBlogWorkflow:

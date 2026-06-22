@@ -5,8 +5,8 @@ from typing import List
 from pydantic import Field, BaseModel, field_validator, model_validator
 from crewai import Crew, Agent, Process, Task
 
-from agents.models.article import Article
-from agents.seo_expert import build_seo_agent
+from app.agents.models.article import Article
+from app.agents.seo_expert import build_seo_agent
 
 from .fact_checker import build_fact_checker_agent
 from .editor import build_editor_agent
@@ -15,7 +15,7 @@ from .redactor import build_writer_agent
 
 
 
-from agents.models.plan import BlogPlan
+from app.agents.models.plan import BlogPlan
 
 
 def build_editor_crew(

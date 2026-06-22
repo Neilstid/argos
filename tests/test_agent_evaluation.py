@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 # Ensure environment variables are loaded
 load_dotenv()
 
-from workflows.news_blog import NewsBlogWorkflow
-from tools.rss_feed import BlogCollector
+from app.workflows.news_blog import NewsBlogWorkflow
+from app.tools.rss_feed import BlogCollector
 
 # Pydantic schemas for structured LLM evaluation response
 class CriteriaEvaluation(BaseModel):

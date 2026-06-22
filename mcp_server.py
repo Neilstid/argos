@@ -8,9 +8,9 @@ RSS feeds using the `BlogCollector` and helper tools.
 import yaml
 from typing import List, Dict, Any, Optional
 from fastmcp import FastMCP
-from tools.blog_finder import search_blogs_ddg
-from tools.rss_feed import BlogCollector
-from tools.rss_finder import rss_finder
+from app.tools.blog_finder import search_blogs_ddg
+from app.tools.rss_feed import BlogCollector
+from app.tools.rss_finder import rss_finder
 
 # Initialize FastMCP Server
 mcp = FastMCP("Argos RSS Feed Reader")

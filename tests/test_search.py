@@ -1,4 +1,4 @@
-from tools.blog_finder import search_blogs_ddg
+from app.tools.blog_finder import search_blogs_ddg
 
 
 def test_duckduckgo():

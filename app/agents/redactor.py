@@ -1,6 +1,6 @@
 from crewai import Agent
 
-from agents.models.article import Article
+from app.agents.models.article import Article
 
 
 def build_writer_agent(

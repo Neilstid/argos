@@ -1,4 +1,4 @@
-from tools.rss_finder import rss_finder
+from app.tools.rss_finder import rss_finder
 
 
 def test_rss_finder_feed():

@@ -17,8 +17,8 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 
-from utils.date import days_ago
-from utils.exceptions import SourceValidationError
+from app.utils.date import days_ago
+from app.utils.exceptions import SourceValidationError
 
 
 class BlogCollector:

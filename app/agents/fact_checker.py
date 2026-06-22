@@ -4,7 +4,7 @@ from crewai import Agent
 from crewai.tools import tool
 from ddgs.ddgs import DDGS
 
-from agents.models.article import Article
+from app.agents.models.article import Article
 
 
 @tool
