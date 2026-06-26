@@ -14,5 +14,5 @@ class Article(BaseModel):
     def sanitize_json_string(cls, v):
         if isinstance(v, str):
             # Repair common LLM escaping artifacts for newlines
-            return v.replace("\n", "\\n").replace("\t", "\\t")
+            return v.replace("\n", "\\n").replace("\t", "\\t").replace("\|", "\\|")
         return v
