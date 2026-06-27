@@ -1,12 +1,6 @@
-import json
-import re
-from typing import List
-
-from pydantic import Field, BaseModel, field_validator, model_validator
-from crewai import Crew, Agent, Process, Task
+from crewai import Crew, Process, Task
 
 from app.agents.models.article import Article
-from app.agents.seo_expert import build_seo_agent
 
 from .fact_checker import build_fact_checker_agent
 from .editor import build_editor_agent

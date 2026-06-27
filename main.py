@@ -42,6 +42,6 @@ def write_blog(
 
 if __name__ == '__main__':
     load_dotenv()
-    mlflow.set_experiment("argos-news-blog")
-    mlflow.crewai.autolog()
+    # mlflow.set_experiment("argos-news-blog")
+    # mlflow.crewai.autolog()
     write_blog()
