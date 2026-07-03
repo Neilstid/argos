@@ -103,7 +103,8 @@ def build_redaction_crew(
         A valid JSON object matching the Article schema. 
         Crucial: The 'content' field contains markdown. You must strictly escape  all newlines as '\\\\n'. 
         
-        **Do not output any raw control characters (\n, \t, \\n, \\t, \|, \\|)**, and do not mix terminal output commands within the JSON string.
+        **Do not output any raw control characters (\n, \t, \\n, \\t, \|, \\|)**, and do not mix terminal output commands within the JSON string. 
+        If you include double quotes (for citation or anything) add 2 backslashs behind like that: \\"
         """,
         agent=writer,
         output_pydantic=Article

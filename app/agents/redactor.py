@@ -49,6 +49,7 @@ def build_writer_agent(
         STRICT FORMATTING REQUIREMENTS:
             1. Return ONLY a valid JSON object.
             2. **Do NOT include any line breaks (\\n), carriage returns (\\r), or tabs (\\t) outside of string values.**
+            3. If you include double quotes (for citation or anything) add 2 backslashs behind like that: \\"
         """,
         max_iter=2,
         verbose=True,

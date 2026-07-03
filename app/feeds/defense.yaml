@@ -1,0 +1,12 @@
+sources:
+ - https://opexnews.fr/feed/
+ - https://www.opex360.com/feed/
+ - https://forcesoperations.com/feed/
+ - https://armees.com/feed/
+ - https://www.navalnews.com/feed/
+
+interest: Defense news, new contract/sell by defense actors, ...
+
+summary_model: mistral/ministral-3b-2512
+writer_model: mistral/mistral-medium-latest
+time_limit: 1
