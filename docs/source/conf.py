@@ -6,6 +6,7 @@
 import os
 import sys
 base_dir = os.path.abspath('../../app/')
+sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, base_dir)
 sys.path.insert(0, os.path.join(base_dir, 'agents'))
 sys.path.insert(0, os.path.join(base_dir, 'news_handler'))

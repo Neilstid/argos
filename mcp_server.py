@@ -90,19 +90,19 @@ def get_feed_from_url(
 
 @mcp.tool
 def get_feeds_from_subject(
-    suject: str
+    subject: str
 ) -> List[str]:
     """
     Find the rss feeds for a given subject
 
     Args:
-        base_url (str): Base url to get the rss feed for
+        subject (str): The subject or topic to search feeds for.
 
     Returns:
-        List[str]: List of URLs towards the rss feeds for the given suject
+        List[str]: List of URLs towards the rss feeds for the given subject
     """
 
-    blogs_site = search_blogs_ddg(keywords=suject)
+    blogs_site = search_blogs_ddg(keywords=subject)
 
     feeds = []
     for site in blogs_site:

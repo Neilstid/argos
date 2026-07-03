@@ -1,3 +1,5 @@
+[![Documentation Status](https://readthedocs.org/projects/argos-rss/badge/?version=latest)](https://argos-rss.readthedocs.io/fr/latest/?badge=latest)
+
 # Argos
 
 Argos is an AI-powered news blog generator. It automatically collects articles from configured RSS feeds, processes and summarizes them using LLM agents, and compiles them into a clean Markdown blog post.
@@ -32,6 +34,7 @@ uv pip install -e .
 You need to provide your API keys for the LLM providers you are using. Create a `.env` file in the root directory (this file is excluded from git) and add your keys. For example, if using Mistral:
 
 ```env
+OPENAI_API_KEY=your_openai_api_key_here
 MISTRAL_API_KEY=your_mistral_api_key_here
 ```
 
@@ -65,9 +68,57 @@ uv run mlflow ui
 
 Then navigate to `http://localhost:5000` in your web browser.
 
+## MCP Server
+
+Argos includes a Model Context Protocol (MCP) server that exposes RSS feed collection and search tools to MCP-compatible AI clients (such as Claude Desktop, Cursor, Windsurf, or custom AI agents).
+
+### Running the Server
+
+Run the server using `fastmcp`:
+
+```bash
+# Run the MCP server
+uv run fastmcp run mcp_server.py
+
+# Run in development mode with the interactive MCP Inspector web UI
+uv run fastmcp dev mcp_server.py
+```
+
+### Configuration with Claude Desktop
+
+Add the following to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "argos": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "C:/Users/Neil Farmer/Documents/GitHub/argos",
+        "run",
+        "fastmcp",
+        "run",
+        "mcp_server.py"
+      ]
+    }
+  }
+}
+```
+
+Make sure to replace the path with the actual absolute path to your Argos workspace directory.
+
+### Available Tools
+
+- `read_feed(url, time_limit, include_images)`: Extracts articles from a single RSS URL.
+- `read_feeds_from_config(config_path, time_limit, include_images)`: Extracts articles from feeds configured in a YAML file.
+- `get_feed_from_url(base_url)`: Finds the RSS feed URL for a given website URL.
+- `get_feeds_from_subject(subject)`: Searches for RSS feeds matching a topic using DuckDuckGo.
+
 ## Project Structure
 
 - `main.py`: The entry point script to run the blog generator.
+- `mcp_server.py`: FastMCP server exposing Argos RSS feed tools.
 - `workflows/news_blog.py`: Defines the `NewsBlogWorkflow`, which orchestrates the collection, processing, and formatting of the articles.
 - `feeds/`: Directory containing `.yaml` configuration files for RSS feeds.
 - `agents/`: Contains the specific agent logic (e.g., `redactor.py`).

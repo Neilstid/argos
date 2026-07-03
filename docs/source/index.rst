@@ -10,5 +10,6 @@ Argos is an AI-powered news blog generator. It automatically collects articles f
    getting_started
    feeds
    usage
+   mcp
    api
 
