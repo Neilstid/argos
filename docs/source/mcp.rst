@@ -121,4 +121,4 @@ Configure a new command-based MCP server in your editor's settings:
 
   .. code-block:: bash
 
-      uv --directory "C:/Users/Neil Farmer/Documents/GitHub/argos" run fastmcp run mcp_server.py
+      uv --directory "./argos" run fastmcp run mcp_server.py
