@@ -1,4 +1,5 @@
 from typing import List
+import re
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -14,5 +15,7 @@ class Article(BaseModel):
     def sanitize_json_string(cls, v):
         if isinstance(v, str):
             # Repair common LLM escaping artifacts for newlines
-            return v.replace("\n", "\\n").replace("\t", "\\t").replace("\|", "\\|")
+            v = v.replace("\n", "\\n").replace("\t", "\\t").replace("\|", "\\|")
+            v = re.sub("[^\\]\"", "\\\"")
+        
         return v
