@@ -16,6 +16,6 @@ class Article(BaseModel):
         if isinstance(v, str):
             # Repair common LLM escaping artifacts for newlines
             v = v.replace("\n", "\\n").replace("\t", "\\t").replace("\|", "\\|")
-            v = re.sub("[^\\]\"", "\\\"")
+            v = re.sub("[^\\]\"", r"\\\"", v)
         
         return v

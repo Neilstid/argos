@@ -104,7 +104,7 @@ def build_redaction_crew(
         Crucial: The 'content' field contains markdown. You must strictly escape  all newlines as '\\\\n'. 
         
         **Do not output any raw control characters (\n, \t, \\n, \\t, \|, \\|)**, and do not mix terminal output commands within the JSON string. 
-        **Do not include double quotes ("), unless with backslash behind it (\\")**
+        **Do not include double quotes ("), unless with backslash behind it (\\")** Don't do anything special for single quotes.
         """,
         agent=writer,
         output_pydantic=Article

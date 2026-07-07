@@ -1,10 +1,9 @@
 from datetime import datetime
 import json
-import os
+import re
 from typing import Union, Optional
 
 import yaml
-from crewai import Crew
 
 from app.agents.models.article import Article
 from app.agents.redaction import build_redaction_crew, build_editor_crew
@@ -130,7 +129,7 @@ class NewsBlogWorkflow:
             "plan": table_of_contents
         })
 
-        self.__result: Article = result.pydantic
+        self.__result: Article = result.json_dict
         return result
 
 
@@ -180,6 +179,12 @@ class NewsBlogWorkflow:
             return None
 
 
+    def rem_extra(self, article):
+        article = re.sub("\\*\"", "\"", article)
+        article = re.sub("\\*'", "'", article)
+        return article.replace("\\n", "\n")
+
+
     def format(self, output_path: str = None):
         """Format the generated result as a Markdown string and save it.
 
@@ -194,12 +199,12 @@ class NewsBlogWorkflow:
         article: Article = self.__result
 
         # Post-process content to download referenced media and replace with relative paths
-        if self.__include_images and output_path and article and article.content:
+        if self.__include_images and output_path and article and article["content"]:
             output_dir = os.path.dirname(output_path) or "."
             if output_dir and not os.path.exists(output_dir):
                 os.makedirs(output_dir, exist_ok=True)
 
-            media_ids = re.findall(r"media-[0-9a-fA-F]+", article.content)
+            media_ids = re.findall(r"media-[0-9a-fA-F]+", article["content"])
             media_ids = list(set(media_ids))
 
             for m_id in media_ids:
@@ -207,9 +212,9 @@ class NewsBlogWorkflow:
                     url = self.__media_map[m_id]
                     rel_path = self._download_media(url, output_dir, m_id)
                     if rel_path:
-                        article.content = article.content.replace(m_id, rel_path)
+                        article["content"] = article["content"].replace(m_id, rel_path)
                     else:
-                        article.content = article.content.replace(m_id, url)
+                        article["content"] = article["content"].replace(m_id, url)
 
         date_str = datetime.now().strftime("%Y-%m-%d")
 
@@ -219,16 +224,16 @@ class NewsBlogWorkflow:
   caption: 'Embed rich media such as videos and LaTeX math'\n"""
 
         formatted = f"""---
-title: "{article.title if article.title else 'AI News Blog'}"
-summary: "{article.summary if article.summary else ''}"
+title: "{article["title"] if article["title"] else 'AI News Blog'}"
+summary: "{article["summary"] if article["summary"] else ''}"
 date: {date_str}
 math: true
 authors:
   - admin
-tags:\n  - {'\n  - '.join(article.tags)}
+tags:\n  - {'\n  - '.join(article["tags"])}
 {image_frontmatter}---
 
-{article.content.replace("\\n", "\n") if article.content else str(article)}
+{self.rem_extra(article["content"]) if article["content"] else str(article)}
 
 Written with [Argos](https://github.com/Neilstid/argos)"""
 
