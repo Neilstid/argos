@@ -6,7 +6,9 @@ from typing import Union, Optional
 import yaml
 
 from app.agents.models.article import Article
+from app.agents.models.podcast import PodcastScript
 from app.agents.redaction import build_redaction_crew, build_editor_crew
+from app.agents.podcast import build_podcast_crew
 from app.news_handler.map_reduce import map_and_reduce, keep_key
 from app.tools.rss_feed import BlogCollector
 
@@ -27,9 +29,10 @@ class NewsBlogWorkflow:
         """
         self.__feed_reader = BlogCollector()
         self.__interest = ""
-        self.__result: Article = None
+        self.__result: Union[Article, PodcastScript] = None
         self.__media_map = {}
         self.__include_images = False
+        self.__output_type = "blog"
 
 
     def build(self, config_path: str):
@@ -69,16 +72,23 @@ class NewsBlogWorkflow:
         time_limit: Union[int, datetime] = None,
         include_images: Optional[bool] = None,
         fact_check: Optional[bool] = None,
-    ) -> Article:
+        output_type: str = "blog",
+    ) -> Union[Article, PodcastScript]:
         """Run the workflow to collect, map and reduce articles.
 
         :param time_limit: Time limit for fetching articles, defaults to None
         :type time_limit: Union[int, datetime], optional
         :param include_images: Whether to include images in the output, defaults to None
         :type include_images: Optional[bool], optional
-        :return: The generated blog post result
+        :param fact_check: Whether to fact check information, defaults to None
+        :type fact_check: Optional[bool], optional
+        :param output_type: The output format (blog or podcast)
+        :type output_type: str
+        :return: The generated blog post or podcast script result
         :rtype: Any
         """
+        self.__output_type = output_type
+
         # Get the correct time limit
         time_limit = time_limit if not time_limit is None else self.__time_limit
 
@@ -108,6 +118,28 @@ class NewsBlogWorkflow:
         if not selected_news:
             selected_news = news[:3]
 
+        if output_type == "podcast":
+            # Run Podcast Crew (using writer and summary models)
+            podcast_crew = build_podcast_crew(
+                interest=self.__interest,
+                writer_model=self.__writer_model,
+                summary_model=self.__summary_model,
+            )
+            result = podcast_crew.kickoff(inputs={
+                "topic": json.dumps(selected_news),
+                "plan": table_of_contents
+            })
+            if result.pydantic:
+                self.__result = result.pydantic.model_dump()
+            elif result.json_dict:
+                self.__result = result.json_dict
+            else:
+                try:
+                    self.__result = json.loads(result.raw)
+                except Exception:
+                    self.__result = None
+            return result
+
         # Build media map from selected articles
         self.__media_map = {}
         if self.__include_images:
@@ -129,7 +161,15 @@ class NewsBlogWorkflow:
             "plan": table_of_contents
         })
 
-        self.__result: Article = result.json_dict
+        if result.pydantic:
+            self.__result = result.pydantic.model_dump()
+        elif result.json_dict:
+            self.__result = result.json_dict
+        else:
+            try:
+                self.__result = json.loads(result.raw)
+            except Exception:
+                self.__result = None
         return result
 
 
@@ -195,6 +235,67 @@ class NewsBlogWorkflow:
         """
         import re
         import os
+
+        if self.__output_type == "podcast":
+            import scipy.io.wavfile
+            import torch
+            from pocket_tts import TTSModel
+
+            podcast: PodcastScript = self.__result
+            if not podcast:
+                print("No podcast generation result found.")
+                return None
+
+            markdown_content = f"# {podcast.get('title', 'AI News Podcast')}\n\n"
+            for turn in podcast.get("turns", []):
+                markdown_content += f"**{turn.get('speaker')}**: {turn.get('text')}\n\n"
+
+            if output_path:
+                output_dir = os.path.dirname(output_path) or "."
+                if output_dir and not os.path.exists(output_dir):
+                    os.makedirs(output_dir, exist_ok=True)
+
+                # 1. Save transcript markdown
+                base_path, _ = os.path.splitext(output_path)
+                md_path = base_path + ".md"
+                with open(md_path, "w", encoding="utf-8") as f:
+                    f.write(markdown_content)
+                print(f"Podcast transcript saved to {md_path}")
+
+                # 2. Perform text-to-speech
+                print("Initializing Pocket TTS model...")
+                model = TTSModel.load_model()
+                print("Loading voices (Anna and Paul)...")
+                voice_states = {
+                    "anna": model.get_state_for_audio_prompt("anna"),
+                    "paul": model.get_state_for_audio_prompt("paul"),
+                }
+
+                audio_segments = []
+                for turn in podcast.get("turns", []):
+                    speaker = turn.get("speaker", "Paul")
+                    speaker_lower = speaker.lower()
+                    # Map speaker name to either 'anna' or 'paul' (default to 'paul')
+                    voice_name = "anna" if "anna" in speaker_lower else "paul"
+                    voice_state = voice_states[voice_name]
+                    print(f"Generating speech for {speaker}...")
+                    # Generate audio tensor
+                    audio = model.generate_audio(voice_state, turn.get("text", ""))
+                    audio_segments.append(audio)
+                    # Add a 0.5s pause of silence between turns
+                    silence_samples = int(0.5 * model.sample_rate)
+                    silence = torch.zeros(silence_samples, dtype=audio.dtype)
+                    audio_segments.append(silence)
+
+                if audio_segments:
+                    merged_audio = torch.cat(audio_segments)
+                    print(f"Saving podcast audio to {output_path}...")
+                    scipy.io.wavfile.write(output_path, model.sample_rate, merged_audio.numpy())
+                else:
+                    print("No dialogue turns found to generate audio.")
+                return None
+            else:
+                return markdown_content
 
         article: Article = self.__result
 

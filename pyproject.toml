@@ -19,6 +19,7 @@ dependencies = [
     "beautifulsoup4>=4.12.0",
     "fastmcp>=3.4.2",
     "duckduckgo-search>=8.1.1",
+    "pocket-tts>=2.1.0",
 ]
 
 [project.scripts]

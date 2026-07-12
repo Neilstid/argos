@@ -8,13 +8,15 @@ Argos is an AI-powered news blog generator. It automatically collects articles f
 
 - **RSS Feed Collection**: Parses and extracts content from multiple RSS feeds.
 - **LLM Processing**: Utilizes `crewai` and `litellm` (with Mistral by default) to map and reduce articles, summarizing and selecting the most relevant news.
-- **Markdown Output**: Generates a ready-to-publish Markdown file.
+- **Multiple Output Formats**:
+  - **Blog Article**: Generates a ready-to-publish Markdown file.
+  - **Podcast**: Generates an engaging discussion dialogue between two characters—Paul (interviewer) and Anna (specialist)—and synthesizes the dialogue locally into a WAV audio file (`.wav`) along with a markdown transcript (`.md`) using `pocket-tts`.
 - **Configurable**: Define your feed sources in simple `.yaml` files.
 
 ## Dependencies
 
 - Python >= 3.12
-- Project dependencies are managed with `uv`.
+- Project dependencies are managed with `uv`. Includes `pocket-tts` for text-to-speech.
 
 ## Installation
 
@@ -40,20 +42,27 @@ MISTRAL_API_KEY=your_mistral_api_key_here
 
 ### Feed Configuration
 
-Feeds are configured using `.yaml` files in the `feeds/` directory. An example configuration is available at `feeds/ai_research.yaml`.
+Feeds are configured using `.yaml` files in the `feeds/` directory. An example configuration is available at `app/feeds/ai_research.yaml`.
 
 ## Usage
 
-You can run the blog generator using the `main.py` script. 
+You can run the generator using the `main.py` script. 
 
+To generate a blog article:
 ```bash
-python main.py --config feeds/ai_research.yaml --output "blog_posts/news_{date}.md" --include-images
+python main.py --config app/feeds/ai_research.yaml --output "blog_posts/news_{date}.md" --output-type blog --include-images
+```
+
+To generate a podcast (audio + transcript):
+```bash
+python main.py --config app/feeds/ai_research.yaml --output "podcasts/news_{date}.wav" --output-type podcast
 ```
 
 ### Command-Line Options
 
-- `--config`: Path to the configuration file (e.g., `feeds/ai_research.yaml`). The configuration file must be in `.yaml` format.
-- `--output`: Path where the generated blog post will be saved. You can use `{date}` to automatically include the current date in the filename (e.g., `output_{date}.md`). Must be a `.md` file.
+- `--config`: Path to the configuration file (e.g., `app/feeds/ai_research.yaml`). The configuration file must be in `.yaml` format.
+- `--output`: Path where the generated blog post or podcast audio will be saved. You can use `{date}` to automatically include the current date in the filename.
+- `--output-type`: Type of output to generate. Choices are `blog` (generates `.md` file) or `podcast` (generates `.wav` audio and matching `.md` transcript). Defaults to `blog`.
 - `--include-images` / `--no-include-images`: Flag to include or exclude images/media in the generated blog post (defaults to False).
 
 ### Tracing and Monitoring
