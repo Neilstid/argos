@@ -20,6 +20,8 @@ dependencies = [
     "fastmcp>=3.4.2",
     "duckduckgo-search>=8.1.1",
     "pocket-tts>=2.1.0",
+    "kokoro>=0.9.4",
+    "soundfile>=0.14.0",
 ]
 
 [project.scripts]

@@ -7,7 +7,7 @@ import mlflow
 @click.command()
 @click.option('--config', type=click.Path(), help='Path to the configuration file (hint: check in feeds folder). Configuration file must be in .yaml format.')
 @click.option('--output', type=click.Path(), help='Blog post or podcast saving path. You may include date with {date}.')
-@click.option('--output-type', type=click.Choice(['blog', 'podcast']), default='blog', help='Type of output to generate: blog (.md) or podcast (.wav).')
+@click.option('--output-type', type=click.Choice(['blog', 'podcast', 'blogcast']), default='blog', help='Type of output to generate: blog (.md), podcast (.wav), or blogcast (.md + .wav).')
 @click.option('--include-images/--no-include-images', default=False, help='Include or exclude images/media in the blog post (defaults to False).')
 @click.option('--fact-check/--no-fact-check', default=False, help='Whether or not to fact check data (defaults to False).')
 def write_blog(
@@ -37,7 +37,12 @@ def write_blog(
     if output:
         output = output.format(**data)
     else:
-        output = f"podcast_{data['date']}.wav" if output_type == "podcast" else f"blog_{data['date']}.md"
+        if output_type == "podcast":
+            output = f"podcast_{data['date']}.wav"
+        elif output_type == "blogcast":
+            output = f"blogcast_{data['date']}.md"
+        else:
+            output = f"blog_{data['date']}.md"
 
     tw = NewsBlogWorkflow()
     tw.build(config)

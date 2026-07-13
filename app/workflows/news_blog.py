@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import re
+import os
 from typing import Union, Optional
 
 import yaml
@@ -11,6 +12,7 @@ from app.agents.redaction import build_redaction_crew, build_editor_crew
 from app.agents.podcast import build_podcast_crew
 from app.news_handler.map_reduce import map_and_reduce, keep_key
 from app.tools.rss_feed import BlogCollector
+from app.utils.podcast import synth_podcast
 
 
 class NewsBlogWorkflow:
@@ -140,6 +142,66 @@ class NewsBlogWorkflow:
                     self.__result = None
             return result
 
+        if output_type == "blogcast":
+            # Build media map first for the article
+            self.__media_map = {}
+            if self.__include_images:
+                for item in selected_news:
+                    for m in item.get("media", []):
+                        self.__media_map[m["id"]] = m["url"]
+
+            # 1. Run Redaction Crew to write the blog post
+            redaction_crew = build_redaction_crew(
+                interest=self.__interest,
+                writer_model=self.__writer_model,
+                summary_model=self.__summary_model,
+                include_images=self.__include_images,
+                fact_check=fact_check
+            )
+            article_result = redaction_crew.kickoff(inputs={
+                "topic": json.dumps(selected_news),
+                "plan": table_of_contents
+            })
+
+            article_data = None
+            if article_result.pydantic:
+                article_data = article_result.pydantic.model_dump()
+            elif article_result.json_dict:
+                article_data = article_result.json_dict
+            else:
+                try:
+                    article_data = json.loads(article_result.raw)
+                except Exception:
+                    article_data = None
+
+            # 2. Run Podcast Crew to write the dialogue script
+            podcast_crew = build_podcast_crew(
+                interest=self.__interest,
+                writer_model=self.__writer_model,
+                summary_model=self.__summary_model,
+            )
+            podcast_result = podcast_crew.kickoff(inputs={
+                "topic": json.dumps(selected_news),
+                "plan": table_of_contents
+            })
+
+            podcast_data = None
+            if podcast_result.pydantic:
+                podcast_data = podcast_result.pydantic.model_dump()
+            elif podcast_result.json_dict:
+                podcast_data = podcast_result.json_dict
+            else:
+                try:
+                    podcast_data = json.loads(podcast_result.raw)
+                except Exception:
+                    podcast_data = None
+
+            self.__result = {
+                "article": article_data,
+                "podcast": podcast_data
+            }
+            return article_result
+
         # Build media map from selected articles
         self.__media_map = {}
         if self.__include_images:
@@ -220,9 +282,9 @@ class NewsBlogWorkflow:
 
 
     def rem_extra(self, article):
-        article = re.sub("\\*\"", "\"", article)
-        article = re.sub("\\*'", "'", article)
-        return article.replace("\\n", "\n")
+        article = re.sub("\\+", "\\", article)
+
+        return article
 
 
     def format(self, output_path: str = None):
@@ -233,113 +295,97 @@ class NewsBlogWorkflow:
         :return: Formatted Markdown string if output_path is None, else None
         :rtype: Union[str, None]
         """
-        import re
-        import os
 
-        if self.__output_type == "podcast":
-            import scipy.io.wavfile
-            import torch
-            from pocket_tts import TTSModel
+        # Init variable
+        base_path, _ = os.path.splitext(output_path)
+        audio_player = ""
+        wav_path = ""
+        md_path = ""
+        image_frontmatter = ""
+        article = None
+        podcast = None
 
-            podcast: PodcastScript = self.__result
-            if not podcast:
-                print("No podcast generation result found.")
-                return None
+        match self.__output_type:
+            case "blogcast":
+                include_audio = True
+                include_markdown = True
 
-            markdown_content = f"# {podcast.get('title', 'AI News Podcast')}\n\n"
-            for turn in podcast.get("turns", []):
-                markdown_content += f"**{turn.get('speaker')}**: {turn.get('text')}\n\n"
+                wav_path = base_path + ".wav"
+                md_path = base_path + ".md"
+                audio_player = f"> 🎙️ **Listen to the podcast version of this article:**\n> <audio controls src=\"{os.path.basename(wav_path)}\"></audio>\n\n"
 
-            if output_path:
+                article = self.__result.get("article") if self.__result else None
+                podcast: PodcastScript = self.__result.get("podcast") if self.__result else None
+            case "podcast":
+                include_audio = True
+                include_markdown = False
+
+                wav_path = base_path + ".wav"
+
+                podcast: PodcastScript = self.__result
+            case "blog":
+                include_audio = False
+                include_markdown = True
+
+                md_path = base_path + ".md"
+
+                article = self.__result
+            case _:
+                raise ValueError(f"Unknown output value: self.__output_type. Expected one of the following: blogcast, podcast, blog")
+
+        if include_audio:
+            synth_podcast(podcast=podcast, wav_path=wav_path)
+        
+        if include_markdown:
+            # Post-process content to download referenced media and replace with relative paths
+            if self.__include_images and output_path and article and article["content"]:
                 output_dir = os.path.dirname(output_path) or "."
                 if output_dir and not os.path.exists(output_dir):
                     os.makedirs(output_dir, exist_ok=True)
 
-                # 1. Save transcript markdown
-                base_path, _ = os.path.splitext(output_path)
-                md_path = base_path + ".md"
-                with open(md_path, "w", encoding="utf-8") as f:
-                    f.write(markdown_content)
-                print(f"Podcast transcript saved to {md_path}")
+                media_ids = re.findall(r"media-[0-9a-fA-F]+", article["content"])
+                media_ids = list(set(media_ids))
 
-                # 2. Perform text-to-speech
-                print("Initializing Pocket TTS model...")
-                model = TTSModel.load_model()
-                print("Loading voices (Anna and Paul)...")
-                voice_states = {
-                    "anna": model.get_state_for_audio_prompt("anna"),
-                    "paul": model.get_state_for_audio_prompt("paul"),
-                }
+                for m_id in media_ids:
+                    if m_id in self.__media_map:
+                        url = self.__media_map[m_id]
+                        rel_path = self._download_media(url, output_dir, m_id)
+                        if rel_path:
+                            article["content"] = article["content"].replace(m_id, rel_path)
+                        else:
+                            article["content"] = article["content"].replace(m_id, url)
 
-                audio_segments = []
-                for turn in podcast.get("turns", []):
-                    speaker = turn.get("speaker", "Paul")
-                    speaker_lower = speaker.lower()
-                    # Map speaker name to either 'anna' or 'paul' (default to 'paul')
-                    voice_name = "anna" if "anna" in speaker_lower else "paul"
-                    voice_state = voice_states[voice_name]
-                    print(f"Generating speech for {speaker}...")
-                    # Generate audio tensor
-                    audio = model.generate_audio(voice_state, turn.get("text", ""))
-                    audio_segments.append(audio)
-                    # Add a 0.5s pause of silence between turns
-                    silence_samples = int(0.5 * model.sample_rate)
-                    silence = torch.zeros(silence_samples, dtype=audio.dtype)
-                    audio_segments.append(silence)
+                image_frontmatter = "image:\ncaption: 'Embed rich media such as videos and LaTeX math'\n"
 
-                if audio_segments:
-                    merged_audio = torch.cat(audio_segments)
-                    print(f"Saving podcast audio to {output_path}...")
-                    scipy.io.wavfile.write(output_path, model.sample_rate, merged_audio.numpy())
-                else:
-                    print("No dialogue turns found to generate audio.")
-                return None
-            else:
-                return markdown_content
+            date_str = datetime.now().strftime("%Y-%m-%d")
 
-        article: Article = self.__result
-
-        # Post-process content to download referenced media and replace with relative paths
-        if self.__include_images and output_path and article and article["content"]:
-            output_dir = os.path.dirname(output_path) or "."
-            if output_dir and not os.path.exists(output_dir):
-                os.makedirs(output_dir, exist_ok=True)
-
-            media_ids = re.findall(r"media-[0-9a-fA-F]+", article["content"])
-            media_ids = list(set(media_ids))
-
-            for m_id in media_ids:
-                if m_id in self.__media_map:
-                    url = self.__media_map[m_id]
-                    rel_path = self._download_media(url, output_dir, m_id)
-                    if rel_path:
-                        article["content"] = article["content"].replace(m_id, rel_path)
-                    else:
-                        article["content"] = article["content"].replace(m_id, url)
-
-        date_str = datetime.now().strftime("%Y-%m-%d")
-
-        image_frontmatter = ""
-        if self.__include_images:
-            image_frontmatter = """image:
-  caption: 'Embed rich media such as videos and LaTeX math'\n"""
-
-        formatted = f"""---
+            formatted = f"""---
 title: "{article["title"] if article["title"] else 'AI News Blog'}"
 summary: "{article["summary"] if article["summary"] else ''}"
 date: {date_str}
 math: true
 authors:
-  - admin
+    - admin
 tags:\n  - {'\n  - '.join(article["tags"])}
-{image_frontmatter}---
+{image_frontmatter}
+---
+
+{audio_player}
+
+---
 
 {self.rem_extra(article["content"]) if article["content"] else str(article)}
 
-Written with [Argos](https://github.com/Neilstid/argos)"""
+Written with [Argos](https://github.com/Neilstid/argos)
+"""
 
-        if output_path:
-            with open(output_path, "w", encoding="utf-8") as f:
-                f.write(formatted)
+            # Save the result
+            if md_path:
+                with open(md_path, "w", encoding="utf-8") as f:
+                    f.write(formatted)
+            else:
+                return formatted
+            
         else:
-            return formatted
+            # Case of podcast
+            return wav_path

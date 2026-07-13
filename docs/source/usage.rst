@@ -20,12 +20,18 @@ To generate a podcast (audio wav + transcript):
 
     python main.py --config app/feeds/ai_research.yaml --output "podcasts/news_{date}.wav" --output-type podcast
 
+To generate a blogcast (blog article with integrated podcast audio player):
+
+.. code-block:: bash
+
+    python main.py --config app/feeds/ai_research.yaml --output "blogcasts/news_{date}.md" --output-type blogcast
+
 Command-Line Options
 --------------------
 
 - ``--config``: Path to the configuration file (e.g., ``app/feeds/ai_research.yaml``). The configuration file must be in ``.yaml`` format.
 - ``--output``: The destination path where the generated blog post or podcast audio will be saved. You can use the ``{date}`` placeholder to dynamically insert the current date.
-- ``--output-type``: The output format to generate: ``blog`` or ``podcast`` (default: ``blog``).
+- ``--output-type``: The output format to generate: ``blog``, ``podcast``, or ``blogcast`` (default: ``blog``).
 - ``--include-images`` / ``--no-include-images``: Override the configuration file parameter to either include or exclude media in the generated blog post.
 
 Tracing and Monitoring

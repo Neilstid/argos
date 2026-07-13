@@ -11,6 +11,7 @@ Argos is an AI-powered news blog generator. It automatically collects articles f
 - **Multiple Output Formats**:
   - **Blog Article**: Generates a ready-to-publish Markdown file.
   - **Podcast**: Generates an engaging discussion dialogue between two characters—Paul (interviewer) and Anna (specialist)—and synthesizes the dialogue locally into a WAV audio file (`.wav`) along with a markdown transcript (`.md`) using `pocket-tts`.
+  - **Blogcast**: Generates the full blog article with the synthesized podcast audio file, automatically embedding an HTML5 audio player at the top of the blog post's Markdown content.
 - **Configurable**: Define your feed sources in simple `.yaml` files.
 
 ## Dependencies
@@ -58,11 +59,16 @@ To generate a podcast (audio + transcript):
 python main.py --config app/feeds/ai_research.yaml --output "podcasts/news_{date}.wav" --output-type podcast
 ```
 
+To generate a blogcast (blog article with integrated podcast audio player):
+```bash
+python main.py --config app/feeds/ai_research.yaml --output "blogcasts/news_{date}.md" --output-type blogcast
+```
+
 ### Command-Line Options
 
 - `--config`: Path to the configuration file (e.g., `app/feeds/ai_research.yaml`). The configuration file must be in `.yaml` format.
 - `--output`: Path where the generated blog post or podcast audio will be saved. You can use `{date}` to automatically include the current date in the filename.
-- `--output-type`: Type of output to generate. Choices are `blog` (generates `.md` file) or `podcast` (generates `.wav` audio and matching `.md` transcript). Defaults to `blog`.
+- `--output-type`: Type of output to generate. Choices are `blog` (generates `.md` file), `podcast` (generates `.wav` audio and matching `.md` transcript), or `blogcast` (generates `.md` article with embedded `.wav` player). Defaults to `blog`.
 - `--include-images` / `--no-include-images`: Flag to include or exclude images/media in the generated blog post (defaults to False).
 
 ### Tracing and Monitoring
