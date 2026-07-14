@@ -47,3 +47,66 @@ You can view these traces by launching the MLflow UI:
     uv run mlflow ui
 
 After running the command, navigate to ``http://localhost:5000`` in your web browser to monitor agent progress and history.
+
+Automation with GitHub Actions
+------------------------------
+
+Since the application is lightweight it can run within github actions. To call argos within another github project, we need first to have it as a dependancy.
+
+.. code-block:: bash
+
+    git submodule add https://github.com/Neilstid/argos *path_where_you_want_it*
+
+Then, we can run the argos script autonomously with teh command-line options inside GitHub Actions. Please find bellow an example of workflow:
+
+.. code-block:: yaml
+
+    # Name of the workflow
+    name: Daily Blog Generator
+
+    # Execution
+    on:
+    schedule:
+        #        m h j M JJJ
+        - cron: '0 7 * * 2-6' # Runs at 7 o'clock from tuesday to saturday included
+    workflow_dispatch:
+
+    jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout
+            uses: actions/checkout@v6
+            with:
+            submodules: recursive
+            token: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: "Set up Python"
+            uses: actions/setup-python@v6
+            with:
+            python-version-file: "scripts/argos/.python-version"
+
+        # Set up uv to install dependancies
+        - name: "Install uv"
+            uses: astral-sh/setup-uv@v5 # v8.1.0
+
+        # Install argos dependancies
+        - name: "Set up Python"
+            working-directory: scripts/argos
+            run: uv sync --locked --all-extras --dev
+
+        # Modify here the arguments for argos base on what you desire
+        - name: "run script"
+            working-directory: scripts/argos
+            run: uv run main.py --config app/feeds/ai_research.yaml --output-type blogcast  --output ../../content/post/daily_ai/daily_ai_{date}.md
+            env:
+            MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }} 
+
+        # Commit and push the post
+        - name: Commit and Push
+            run: |
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git add .
+            git commit -m "Auto: Nouveau post de blog du $(date +'%Y-%m-%d')" || echo "Rien à commiter"
+            git push
