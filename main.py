@@ -51,9 +51,11 @@ def write_blog(
         include_images=include_images,
         fact_check=fact_check,
         output_type=output_type,
+    )
+    tw.format(
+        output_path=output,
         image_folder=image_folder
     )
-    tw.format(output)
 
 if __name__ == '__main__':
     load_dotenv()
