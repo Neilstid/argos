@@ -287,7 +287,11 @@ class NewsBlogWorkflow:
         return article
 
 
-    def format(self, output_path: str = None):
+    def format(
+        self, 
+        output_path: str = None,
+        image_folder: Optional[str] = "",
+    ):
         """Format the generated result as a Markdown string and save it.
 
         :param output_path: Path to save the Markdown file, defaults to None
@@ -339,7 +343,9 @@ class NewsBlogWorkflow:
         if include_markdown:
             # Post-process content to download referenced media and replace with relative paths
             if self.__include_images and output_path and article and article["content"]:
-                output_dir = os.path.dirname(output_path) or "."
+                output_dir = image_folder or os.path.dirname(output_path) or "."
+                dir_name = os.path.splitext(os.path.basename(output_path))[0]
+
                 if output_dir and not os.path.exists(output_dir):
                     os.makedirs(output_dir, exist_ok=True)
 
@@ -349,7 +355,9 @@ class NewsBlogWorkflow:
                 for m_id in media_ids:
                     if m_id in self.__media_map:
                         url = self.__media_map[m_id]
-                        rel_path = self._download_media(url, output_dir, m_id)
+                        all_path = self._download_media(url, os.path.join(output_dir, dir_name), m_id)
+                        rel_path = os.path.join(dir_name, os.path.basename(all_path))
+
                         if rel_path:
                             article["content"] = article["content"].replace(m_id, rel_path)
                         else:
