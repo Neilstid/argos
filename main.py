@@ -37,12 +37,7 @@ def write_blog(
     if output:
         output = output.format(**data)
     else:
-        if output_type == "podcast":
-            output = f"podcast_{data['date']}.wav"
-        elif output_type == "blogcast":
-            output = f"blogcast_{data['date']}.md"
-        else:
-            output = f"blog_{data['date']}.md"
+        output = f"blog_{data['date']}"
 
     tw = NewsBlogWorkflow()
     tw.build(config)

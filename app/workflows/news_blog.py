@@ -282,7 +282,7 @@ class NewsBlogWorkflow:
 
 
     def rem_extra(self, article):
-        article = re.sub("\\+", "\\", article)
+        article = re.sub(r"\\+", r"\\", article)
 
         return article
 
