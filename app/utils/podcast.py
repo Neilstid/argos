@@ -46,7 +46,6 @@ def synth_podcast_kokoro(podcast, wav_path):
 
     if audio_segments:
         merged_audio = np.concatenate(audio_segments)
-        print(f"Saving podcast audio to {wav_path}...")
         sf.write(wav_path, merged_audio, sample_rate)
     else:
         print("No dialogue turns found to generate audio.")
@@ -76,7 +75,6 @@ def synth_podcast_pocket_tss(podcast, wav_path):
 
     if audio_segments:
         merged_audio = torch.cat(audio_segments)
-        print(f"Saving podcast audio to {wav_path}...")
         scipy.io.wavfile.write(wav_path, model.sample_rate, merged_audio.numpy())
     else:
         print("No dialogue turns found to generate audio.")

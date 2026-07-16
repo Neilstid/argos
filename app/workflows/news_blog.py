@@ -284,6 +284,15 @@ class NewsBlogWorkflow:
     def rem_extra(self, article):
         article = re.sub(r"\\+", r"\\", article)
 
+        article = re.sub("\\’", "’", article)
+        article = re.sub("\\\"", "\"", article)
+        article = re.sub("\'", "'", article)
+                         
+        article = article.replace('\\n', '\n')
+        article = article.replace('\\r', '\r')
+        article = article.replace('\\t', '\t')
+        article = article.replace('\\u', '\\u')
+
         return article
 
 
@@ -291,17 +300,22 @@ class NewsBlogWorkflow:
         self, 
         output_path: str = None,
         image_folder: Optional[str] = "",
+        bundle: bool = False,
     ):
         """Format the generated result as a Markdown string and save it.
 
         :param output_path: Path to save the Markdown file, defaults to None
         :type output_path: str, optional
+        :param image_folder: Path to the folder where the image should be stored, defaults to ""
+        :type image_folder: str, optional
+        :param bundle: Whether to bundle everything inside a folder named output_path, defaults to False
+        :type bundle: bool, optional
         :return: Formatted Markdown string if output_path is None, else None
         :rtype: Union[str, None]
         """
 
         # Init variable
-        base_path, _ = os.path.splitext(output_path)
+        base_path, _ = os.path.splitext(output_path) if output_path else ("", "")
         audio_player = ""
         wav_path = ""
         md_path = ""
@@ -314,8 +328,13 @@ class NewsBlogWorkflow:
                 include_audio = True
                 include_markdown = True
 
-                wav_path = base_path + ".wav"
-                md_path = base_path + ".md"
+                if bundle and output_path:
+                    os.makedirs(output_path, exist_ok=True)
+                    wav_path = os.path.join(output_path, "podcast.wav")
+                    md_path = os.path.join(output_path, "blog.md")
+                else:
+                    wav_path = base_path + ".wav" if output_path else ""
+                    md_path = base_path + ".md" if output_path else ""
                 audio_player = f"> 🎙️ **Listen to the podcast version of this article:**\n> <audio controls src=\"{os.path.basename(wav_path)}\"></audio>\n\n"
 
                 article = self.__result.get("article") if self.__result else None
@@ -324,14 +343,22 @@ class NewsBlogWorkflow:
                 include_audio = True
                 include_markdown = False
 
-                wav_path = base_path + ".wav"
+                if bundle and output_path:
+                    os.makedirs(output_path, exist_ok=True)
+                    wav_path = os.path.join(output_path, "podcast.wav")
+                else:
+                    wav_path = base_path + ".wav" if output_path else ""
 
                 podcast: PodcastScript = self.__result
             case "blog":
                 include_audio = False
                 include_markdown = True
 
-                md_path = base_path + ".md"
+                if bundle and output_path:
+                    os.makedirs(output_path, exist_ok=True)
+                    md_path = os.path.join(output_path, "blog.md")
+                else:
+                    md_path = base_path + ".md" if output_path else ""
 
                 article = self.__result
             case _:
@@ -343,25 +370,40 @@ class NewsBlogWorkflow:
         if include_markdown:
             # Post-process content to download referenced media and replace with relative paths
             if self.__include_images and output_path and article and article["content"]:
-                output_dir = image_folder or os.path.dirname(output_path) or "."
-                dir_name = os.path.splitext(os.path.basename(output_path))[0]
+                if bundle:
+                    output_dir = output_path
+                    media_ids = re.findall(r"media-[0-9a-fA-F]+", article["content"])
+                    media_ids = list(set(media_ids))
 
-                if output_dir and not os.path.exists(output_dir):
-                    os.makedirs(output_dir, exist_ok=True)
+                    for m_id in media_ids:
+                        if m_id in self.__media_map:
+                            url = self.__media_map[m_id]
+                            rel_path = self._download_media(url, output_dir, m_id)
 
-                media_ids = re.findall(r"media-[0-9a-fA-F]+", article["content"])
-                media_ids = list(set(media_ids))
+                            if rel_path:
+                                article["content"] = article["content"].replace(m_id, rel_path)
+                            else:
+                                article["content"] = article["content"].replace(m_id, url)
+                else:
+                    output_dir = image_folder or os.path.dirname(output_path) or "."
+                    dir_name = os.path.splitext(os.path.basename(output_path))[0]
 
-                for m_id in media_ids:
-                    if m_id in self.__media_map:
-                        url = self.__media_map[m_id]
-                        all_path = self._download_media(url, os.path.join(output_dir, dir_name), m_id)
-                        rel_path = os.path.join(dir_name, os.path.basename(all_path))
+                    if output_dir and not os.path.exists(output_dir):
+                        os.makedirs(output_dir, exist_ok=True)
 
-                        if rel_path:
-                            article["content"] = article["content"].replace(m_id, rel_path)
-                        else:
-                            article["content"] = article["content"].replace(m_id, url)
+                    media_ids = re.findall(r"media-[0-9a-fA-F]+", article["content"])
+                    media_ids = list(set(media_ids))
+
+                    for m_id in media_ids:
+                        if m_id in self.__media_map:
+                            url = self.__media_map[m_id]
+                            all_path = self._download_media(url, os.path.join(output_dir, dir_name), m_id)
+                            rel_path = os.path.join(dir_name, os.path.basename(all_path))
+
+                            if rel_path:
+                                article["content"] = article["content"].replace(m_id, rel_path)
+                            else:
+                                article["content"] = article["content"].replace(m_id, url)
 
                 image_frontmatter = "image:\ncaption: 'Embed rich media such as videos and LaTeX math'\n"
 

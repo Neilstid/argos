@@ -11,13 +11,15 @@ import mlflow
 @click.option('--include-images/--no-include-images', default=False, help='Include or exclude images/media in the blog post (defaults to False).')
 @click.option('--image-folder', type=click.Path(), default="", help='Path to the folder where the image should be stored')
 @click.option('--fact-check/--no-fact-check', default=False, help='Whether or not to fact check data (defaults to False).')
+@click.option('--bundle/--no-bundle', default=False, help='Save all outputs in a single folder named after output path, with the blog as index.md, audio in the folder, and images in media/.')
 def write_blog(
     config: str,
     output: str,
     output_type: str,
     include_images: bool,
     image_folder: str,
-    fact_check: bool
+    fact_check: bool,
+    bundle: bool
 ):
     """Generate and write the news blog or podcast.
 
@@ -33,6 +35,8 @@ def write_blog(
     :type image_folder: str, optional
     :param fact_check: Whether or not to fact check data, defaults to False
     :type fact_check: bool, optional
+    :param bundle: Whether to bundle outputs into a folder, defaults to False
+    :type bundle: bool, optional
     :return: None
     :rtype: None
     """
@@ -54,7 +58,8 @@ def write_blog(
     )
     tw.format(
         output_path=output,
-        image_folder=image_folder
+        image_folder=image_folder,
+        bundle=bundle
     )
 
 if __name__ == '__main__':
