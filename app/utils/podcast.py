@@ -1,6 +1,5 @@
 import random as rnd
 
-import scipy.io.wavfile
 import torch
 import numpy as np
 import soundfile as sf
@@ -9,10 +8,10 @@ from pocket_tts import TTSModel
 from kokoro import KPipeline
 
 
-def synth_podcast(podcast, wav_path):
-    return synth_podcast_kokoro(podcast, wav_path)
+def synth_podcast(podcast, audio_path):
+    return synth_podcast_kokoro(podcast, audio_path)
 
-def synth_podcast_kokoro(podcast, wav_path):
+def synth_podcast_kokoro(podcast, audio_path):
     print("Initializing Kokoro pipeline...")
     pipeline = KPipeline(lang_code='a')
 
@@ -46,14 +45,14 @@ def synth_podcast_kokoro(podcast, wav_path):
 
     if audio_segments:
         merged_audio = np.concatenate(audio_segments)
-        sf.write(wav_path, merged_audio, sample_rate)
+        sf.write(audio_path, merged_audio, sample_rate)
     else:
         print("No dialogue turns found to generate audio.")
 
     return True
 
 
-def synth_podcast_pocket_tss(podcast, wav_path):
+def synth_podcast_pocket_tss(podcast, audio_path):
     model = TTSModel.load_model()
     voice_states = {
         "anna": model.get_state_for_audio_prompt("anna"),
@@ -75,15 +74,15 @@ def synth_podcast_pocket_tss(podcast, wav_path):
 
     if audio_segments:
         merged_audio = torch.cat(audio_segments)
-        scipy.io.wavfile.write(wav_path, model.sample_rate, merged_audio.numpy())
+        sf.write(audio_path, merged_audio.numpy(), model.sample_rate)
     else:
         print("No dialogue turns found to generate audio.")
 
     return True
 
 
-def synth_podcast(podcast, wav_path, method="kokoro"):
+def synth_podcast(podcast, audio_path, method="kokoro"):
     if method == "pocket_tts":
-        return synth_podcast_pocket_tss(podcast, wav_path)
+        return synth_podcast_pocket_tss(podcast, audio_path)
     else:
-        return synth_podcast_kokoro(podcast, wav_path)
+        return synth_podcast_kokoro(podcast, audio_path)

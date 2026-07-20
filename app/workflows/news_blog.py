@@ -291,7 +291,7 @@ class NewsBlogWorkflow:
         article = article.replace('\\n', '\n')
         article = article.replace('\\r', '\r')
         article = article.replace('\\t', '\t')
-        article = article.replace('\\u', '\\u')
+        article = article.replace('\\u', '\\\\u')
 
         return article
 
@@ -317,7 +317,7 @@ class NewsBlogWorkflow:
         # Init variable
         base_path, _ = os.path.splitext(output_path) if output_path else ("", "")
         audio_player = ""
-        wav_path = ""
+        audio_path = ""
         md_path = ""
         image_frontmatter = ""
         article = None
@@ -330,12 +330,12 @@ class NewsBlogWorkflow:
 
                 if bundle and output_path:
                     os.makedirs(output_path, exist_ok=True)
-                    wav_path = os.path.join(output_path, "podcast.wav")
-                    md_path = os.path.join(output_path, "blog.md")
+                    audio_path = os.path.join(output_path, "index.mp3")
+                    md_path = os.path.join(output_path, "index.md")
                 else:
-                    wav_path = base_path + ".wav" if output_path else ""
+                    audio_path = base_path + ".mp3" if output_path else ""
                     md_path = base_path + ".md" if output_path else ""
-                audio_player = f"> 🎙️ **Listen to the podcast version of this article:**\n> <audio controls src=\"{os.path.basename(wav_path)}\"></audio>\n\n"
+                audio_player = f"> 🎙️ **Listen to the podcast version of this article:**\n> <audio controls src=\"{os.path.basename(audio_path)}\"></audio>\n\n"
 
                 article = self.__result.get("article") if self.__result else None
                 podcast: PodcastScript = self.__result.get("podcast") if self.__result else None
@@ -345,9 +345,9 @@ class NewsBlogWorkflow:
 
                 if bundle and output_path:
                     os.makedirs(output_path, exist_ok=True)
-                    wav_path = os.path.join(output_path, "podcast.wav")
+                    audio_path = os.path.join(output_path, "index.mp3")
                 else:
-                    wav_path = base_path + ".wav" if output_path else ""
+                    audio_path = base_path + ".mp3" if output_path else ""
 
                 podcast: PodcastScript = self.__result
             case "blog":
@@ -356,7 +356,7 @@ class NewsBlogWorkflow:
 
                 if bundle and output_path:
                     os.makedirs(output_path, exist_ok=True)
-                    md_path = os.path.join(output_path, "blog.md")
+                    md_path = os.path.join(output_path, "index.md")
                 else:
                     md_path = base_path + ".md" if output_path else ""
 
@@ -365,7 +365,7 @@ class NewsBlogWorkflow:
                 raise ValueError(f"Unknown output value: self.__output_type. Expected one of the following: blogcast, podcast, blog")
 
         if include_audio:
-            synth_podcast(podcast=podcast, wav_path=wav_path)
+            synth_podcast(podcast=podcast, audio_path=audio_path)
         
         if include_markdown:
             # Post-process content to download referenced media and replace with relative paths
@@ -438,4 +438,4 @@ Written with [Argos](https://github.com/Neilstid/argos)
             
         else:
             # Case of podcast
-            return wav_path
+            return audio_path

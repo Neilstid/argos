@@ -50,17 +50,17 @@ def test_bundle_blogcast(tmp_path, monkeypatch):
     workflow._NewsBlogWorkflow__output_type = "blogcast"
     
     # Mock synth_podcast to not generate real audio
-    monkeypatch.setattr("app.workflows.news_blog.synth_podcast", lambda podcast, wav_path: open(wav_path, "w").close())
+    monkeypatch.setattr("app.workflows.news_blog.synth_podcast", lambda podcast, audio_path: open(audio_path, "w").close())
     
     output_path = os.path.join(tmp_path, "my_bundled_blogcast")
     
     workflow.format(output_path=output_path, bundle=True)
     
-    # Verify index.md and index.wav were created in output_path folder
+    # Verify index.md and index.mp3 were created in output_path folder
     assert os.path.exists(os.path.join(output_path, "index.md"))
-    assert os.path.exists(os.path.join(output_path, "index.wav"))
+    assert os.path.exists(os.path.join(output_path, "index.mp3"))
     
     with open(os.path.join(output_path, "index.md"), "r", encoding="utf-8") as f:
         content = f.read()
         assert "Test Blogcast Title" in content
-        assert "index.wav" in content
+        assert "index.mp3" in content

@@ -14,11 +14,11 @@ To generate a blog article:
 
     python main.py --config app/feeds/ai_research.yaml --output "blog_posts/news_{date}.md" --output-type blog --include-images
 
-To generate a podcast (audio wav + transcript):
+To generate a podcast (audio mp3 + transcript):
 
 .. code-block:: bash
 
-    python main.py --config app/feeds/ai_research.yaml --output "podcasts/news_{date}.wav" --output-type podcast
+    python main.py --config app/feeds/ai_research.yaml --output "podcasts/news_{date}.mp3" --output-type podcast
 
 To generate a blogcast (blog article with integrated podcast audio player):
 

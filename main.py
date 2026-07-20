@@ -7,7 +7,7 @@ import mlflow
 @click.command()
 @click.option('--config', type=click.Path(), help='Path to the configuration file (hint: check in feeds folder). Configuration file must be in .yaml format.')
 @click.option('--output', type=click.Path(), help='Blog post or podcast saving path. You may include date with {date}.')
-@click.option('--output-type', type=click.Choice(['blog', 'podcast', 'blogcast']), default='blog', help='Type of output to generate: blog (.md), podcast (.wav), or blogcast (.md + .wav).')
+@click.option('--output-type', type=click.Choice(['blog', 'podcast', 'blogcast']), default='blog', help='Type of output to generate: blog (.md), podcast (.mp3), or blogcast (.md + .mp3).')
 @click.option('--include-images/--no-include-images', default=False, help='Include or exclude images/media in the blog post (defaults to False).')
 @click.option('--image-folder', type=click.Path(), default="", help='Path to the folder where the image should be stored')
 @click.option('--fact-check/--no-fact-check', default=False, help='Whether or not to fact check data (defaults to False).')

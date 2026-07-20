@@ -20,11 +20,11 @@
   - **Fact-Checker Agent**: Optional step to verify data and ground claims in source texts.
 - 🎙️ **Automated Podcast & Text-to-Speech (TTS)**:
   - Generates conversational dialogue between two hosts: **Paul** (interviewer) and **Anna** (subject matter expert).
-  - Synthesizes speech locally into high-quality WAV audio using `pocket-tts` or `kokoro`.
+  - Synthesizes speech locally into high-quality MP3 audio using `pocket-tts` or `kokoro`.
 - 🎛️ **Versatile Output Types**:
   - `blog`: A Hugo-compatible Markdown file (`.md`).
-  - `podcast`: A synthesized audio file (`.wav`) along with its text script.
-  - `blogcast`: A Markdown article with a built-in HTML5 `<audio>` player referencing the synthesized WAV podcast.
+  - `podcast`: A synthesized audio file (`.mp3`) along with its text script.
+  - `blogcast`: A Markdown article with a built-in HTML5 `<audio>` player referencing the synthesized MP3 podcast.
 - 🖼️ **Media Manager**: Automatically downloads source media files locally to include in your final blog post.
 - 🌐 **Built-in FastMCP Server**: Exposes RSS feed extraction, feed discovery, and search tools to Model Context Protocol (MCP) clients (e.g., Claude Desktop, Cursor).
 - 📊 **Agent Tracing**: Auto-logs agent execution traces to **MLflow** for debugging, optimization, and auditing.
@@ -87,13 +87,13 @@ python main.py --config app/feeds/ai_research.yaml --output "blog_posts/news_{da
 ```
 
 ### 2. Generate a Podcast Script & Audio
-Synthesizes a discussion podcast WAV file from RSS feed articles.
+Synthesizes a discussion podcast MP3 file from RSS feed articles.
 ```bash
-python main.py --config app/feeds/ai_research.yaml --output "podcasts/news_{date}.wav" --output-type podcast
+python main.py --config app/feeds/ai_research.yaml --output "podcasts/news_{date}.mp3" --output-type podcast
 ```
 
 ### 3. Generate a Blogcast
-Outputs a Markdown article with an embedded HTML5 audio player referencing the generated WAV file.
+Outputs a Markdown article with an embedded HTML5 audio player referencing the generated MP3 file.
 ```bash
 python main.py --config app/feeds/ai_research.yaml --output "blogcasts/news_{date}.md" --output-type blogcast
 ```
