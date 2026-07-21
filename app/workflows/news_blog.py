@@ -291,7 +291,6 @@ class NewsBlogWorkflow:
         article = article.replace('\\n', '\n')
         article = article.replace('\\r', '\r')
         article = article.replace('\\t', '\t')
-        article = article.replace('\\u', '\u')
 
         return article
 
