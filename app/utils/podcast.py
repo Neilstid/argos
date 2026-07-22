@@ -18,7 +18,7 @@ def synth_podcast_kokoro(podcast, audio_path):
     # Mapping speakers to Kokoro en-us voices
     # af_sarah is American Female, am_adam is American Male
     audio_segments = []
-    sample_rate = 2400
+    sample_rate = 24000
 
     for turn in podcast.get("turns", []):
         speaker = turn.get("speaker", "Paul")
