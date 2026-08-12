@@ -7,6 +7,6 @@ sources:
 
 interest: Defense news, new contract/sell by defense actors, ...
 
-summary_model: mistral/ministral-3b-2512
+summary_model: openrouter/nvidia/nemotron-3.5-lightning:free
 writer_model: mistral/mistral-medium-latest
 time_limit: 1

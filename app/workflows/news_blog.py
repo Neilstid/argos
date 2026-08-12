@@ -12,6 +12,7 @@ from app.agents.redaction import build_redaction_crew, build_editor_crew
 from app.agents.podcast import build_podcast_crew
 from app.news_handler.map_reduce import map_and_reduce, keep_key
 from app.tools.rss_feed import BlogCollector
+from app.tools.image_generator import create_banner_prompt, generate_banner_image, slugify_title
 from app.utils.podcast import synth_podcast
 
 
@@ -35,6 +36,9 @@ class NewsBlogWorkflow:
         self.__media_map = {}
         self.__include_images = False
         self.__output_type = "blog"
+        self.__image_model = None
+        self.__banner_bytes = None
+        self.__banner_filename = None
 
 
     def build(self, config_path: str):
@@ -54,6 +58,7 @@ class NewsBlogWorkflow:
         self.__interest = config.get("interest", "")
         self.__summary_model = config.get("summary_model", config.get("model", "mistral/mistral-small-latest"))
         self.__writer_model = config.get("writer_model", config.get("model", "mistral/mistral-medium-latest"))
+        self.__image_model = config.get("image_model", None)
         self.__time_limit = config.get("time_limit", 1)
         self.__include_images = config.get("include_images", False)
 
@@ -75,6 +80,7 @@ class NewsBlogWorkflow:
         include_images: Optional[bool] = None,
         fact_check: Optional[bool] = None,
         output_type: str = "blog",
+        image_model: Optional[str] = None,
     ) -> Union[Article, PodcastScript]:
         """Run the workflow to collect, map and reduce articles.
 
@@ -86,6 +92,8 @@ class NewsBlogWorkflow:
         :type fact_check: Optional[bool], optional
         :param output_type: The output format (blog or podcast)
         :type output_type: str
+        :param image_model: Model to use for generating article banner image, defaults to None
+        :type image_model: Optional[str], optional
         :return: The generated blog post or podcast script result
         :rtype: Any
         """
@@ -96,6 +104,9 @@ class NewsBlogWorkflow:
 
         if include_images is not None:
             self.__include_images = include_images
+
+        if image_model is not None:
+            self.__image_model = image_model
 
         news = self.__feed_reader.collect(time_limit=time_limit, include_images=self.__include_images)
         # Use summary model for mapping and reducing articles
@@ -200,6 +211,7 @@ class NewsBlogWorkflow:
                 "article": article_data,
                 "podcast": podcast_data
             }
+            self._generate_banner()
             return article_result
 
         # Build media map from selected articles
@@ -232,7 +244,31 @@ class NewsBlogWorkflow:
                 self.__result = json.loads(result.raw)
             except Exception:
                 self.__result = None
+        self._generate_banner()
         return result
+
+
+    def _generate_banner(self):
+        """Generate illustrative banner prompt using writer_model and banner image using image_model if configured."""
+        if not self.__image_model:
+            return
+
+        article_data = None
+        if isinstance(self.__result, dict):
+            if "article" in self.__result:
+                article_data = self.__result["article"]
+            else:
+                article_data = self.__result
+
+        if article_data:
+            try:
+                prompt = create_banner_prompt(article_data, writer_model=self.__writer_model)
+                banner_bytes = generate_banner_image(prompt, image_model=self.__image_model)
+                slug = slugify_title(article_data.get("title", ""))
+                self.__banner_filename = f"banner_{slug}.png"
+                self.__banner_bytes = banner_bytes
+            except Exception as e:
+                print(f"Error generating banner image with model {self.__image_model}: {e}")
 
 
     def _download_media(self, url: str, output_dir: str, media_id: str) -> Optional[str]:
@@ -367,8 +403,34 @@ class NewsBlogWorkflow:
             synth_podcast(podcast=podcast, audio_path=audio_path)
         
         if include_markdown:
+            banner_rel_path = None
+            if self.__banner_bytes and self.__banner_filename:
+                if bundle and output_path:
+                    media_dir = os.path.join(output_path, "media")
+                    os.makedirs(media_dir, exist_ok=True)
+                    banner_dest = os.path.join(media_dir, self.__banner_filename)
+                    with open(banner_dest, "wb") as f:
+                        f.write(self.__banner_bytes)
+                    banner_rel_path = f"media/{self.__banner_filename}"
+                else:
+                    output_dir = image_folder or (os.path.dirname(output_path) if output_path else "") or "."
+                    dir_name = os.path.splitext(os.path.basename(output_path))[0] if output_path else ""
+                    if dir_name:
+                        target_dir = os.path.join(output_dir, dir_name)
+                        os.makedirs(target_dir, exist_ok=True)
+                        banner_dest = os.path.join(target_dir, self.__banner_filename)
+                        with open(banner_dest, "wb") as f:
+                            f.write(self.__banner_bytes)
+                        banner_rel_path = f"{dir_name}/{self.__banner_filename}"
+                    else:
+                        os.makedirs(output_dir, exist_ok=True)
+                        banner_dest = os.path.join(output_dir, self.__banner_filename)
+                        with open(banner_dest, "wb") as f:
+                            f.write(self.__banner_bytes)
+                        banner_rel_path = self.__banner_filename
+
             # Post-process content to download referenced media and replace with relative paths
-            if self.__include_images and output_path and article and article["content"]:
+            if self.__include_images and output_path and article and article.get("content"):
                 if bundle:
                     output_dir = output_path
                     media_ids = re.findall(r"media-[0-9a-fA-F]+", article["content"])
@@ -404,7 +466,13 @@ class NewsBlogWorkflow:
                             else:
                                 article["content"] = article["content"].replace(m_id, url)
 
-                image_frontmatter = "image:\ncaption: 'Embed rich media such as videos and LaTeX math'\n"
+            if banner_rel_path:
+                banner_rel_path = banner_rel_path.replace("\\", "/")
+                image_frontmatter = f"banner: {banner_rel_path}\nimage:\n  caption: '{article['title'] if article['title'] else 'AI News Blog'}'\n  filename: '{banner_rel_path}'\n"
+            elif self.__include_images and output_path and article and article.get("content"):
+                image_frontmatter = f"image:\ncaption: '{article['title'] if article['title'] else 'AI News Blog'}'\n"
+            else:
+                image_frontmatter = ""
 
             date_str = datetime.now().strftime("%Y-%m-%d")
 

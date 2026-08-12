@@ -10,6 +10,7 @@ import mlflow
 @click.option('--output-type', type=click.Choice(['blog', 'podcast', 'blogcast']), default='blog', help='Type of output to generate: blog (.md), podcast (.mp3), or blogcast (.md + .mp3).')
 @click.option('--include-images/--no-include-images', default=False, help='Include or exclude images/media in the blog post (defaults to False).')
 @click.option('--image-folder', type=click.Path(), default="", help='Path to the folder where the image should be stored')
+@click.option('--image-model', type=str, default=None, help='Image generation model to create a banner image for the article.')
 @click.option('--fact-check/--no-fact-check', default=False, help='Whether or not to fact check data (defaults to False).')
 @click.option('--bundle/--no-bundle', default=False, help='Save all outputs in a single folder named after output path, with the blog as index.md, audio in the folder, and images in media/.')
 def write_blog(
@@ -18,6 +19,7 @@ def write_blog(
     output_type: str,
     include_images: bool,
     image_folder: str,
+    image_model: str,
     fact_check: bool,
     bundle: bool
 ):
@@ -33,6 +35,8 @@ def write_blog(
     :type include_images: bool, optional
     :param image_folder: Path to the folder where the image should be stored, defaults to ""
     :type image_folder: str, optional
+    :param image_model: Image generation model to create a banner image for the article, defaults to None
+    :type image_model: str, optional
     :param fact_check: Whether or not to fact check data, defaults to False
     :type fact_check: bool, optional
     :param bundle: Whether to bundle outputs into a folder, defaults to False
@@ -55,6 +59,7 @@ def write_blog(
         include_images=include_images,
         fact_check=fact_check,
         output_type=output_type,
+        image_model=image_model,
     )
     tw.format(
         output_path=output,
