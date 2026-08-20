@@ -1,21 +1,10 @@
 from typing import List
-import re
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 
 class Article(BaseModel):
     title: str = Field(description="Title of the article")
     summary: str = Field(description="Summary of the article")
     tags: List[str] = Field(description="List of tags for the article")
-    content: str = Field(description="Content of the article")
-
-    @field_validator("content", mode="before")
-    @classmethod
-    def sanitize_json_string(cls, v):
-        if isinstance(v, str):
-            # Repair common LLM escaping artifacts for newlines
-            v = v.replace("\n", "\\n").replace("\t", "\\t").replace("\|", "\\|")
-            v = re.sub("[^\\]\"", r"\\\"", v)
-        
-        return v
+    content: str = Field(description="Content of the article")

@@ -28,11 +28,7 @@ def build_editor_crew(
         {topic}
         """,
         expected_output="""
-        A valid JSON object matching the BlogPlan schema. 
-        Crucial: The 'table_of_contents' field contains markdown. You must strictly escape  all newlines as '\\\\n'. 
-        
-        **Do not output any raw control characters (\n, \t, \\n, \\t)**, and do not mix terminal output commands within the JSON string.
-        **Do not include double quotes ("), unless with backslash behind it (\\")**
+        A valid JSON object matching the BlogPlan schema.
         """,
         agent=editor,
         output_json=BlogPlan,
@@ -75,7 +71,7 @@ def build_redaction_crew(
         The blog post `content` field must be written in Markdown and follow this PREMIUM HYBRID LAYOUT:
 
         1. **Executive Summary / TL;DR**:
-           - Start the content with a blockquote callout. Use `> 💡 **TL;DR:** ` followed by a 2-3 sentence high-level executive summary of the main news covered.
+           - Start the content with a blockquote callout. Use `> 💡 **TL;DR:** ` followed directly by a 2-3 sentence high-level executive summary of the main news covered. Do not wrap the summary or blockquote in quotation marks.
 
         2. **Key Highlights Table**:
            - Immediately below the TL;DR, include a 2-column Markdown table summarizing key metrics, insights, or innovations.
@@ -99,12 +95,8 @@ def build_redaction_crew(
         # News
         {topic}
         """,
-        expected_output=r"""
-        A valid JSON object matching the Article schema. 
-        Crucial: The 'content' field contains markdown. You must strictly escape  all newlines as '\\\\n'. 
-        
-        **Do not output any raw control characters (\n, \t, \\n, \\t, \|, \\|)**, and do not mix terminal output commands within the JSON string. 
-        **Do not include double quotes ("), unless with backslash behind it (\\")** Don't do anything special for single quotes.
+        expected_output="""
+        A valid JSON object matching the Article schema with title, summary, tags, and content fields.
         """,
         agent=writer,
         output_pydantic=Article

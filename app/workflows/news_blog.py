@@ -317,16 +317,116 @@ class NewsBlogWorkflow:
             return None
 
 
-    def rem_extra(self, article):
-        article = re.sub(r"\\+", r"\\", article)
+    @staticmethod
+    def _decode_unicode(text: str) -> str:
+        """Decode \\uXXXX and \\UXXXXXXXX sequences to unicode characters."""
+        def replace_u4(match):
+            try:
+                return chr(int(match.group(1), 16))
+            except ValueError:
+                return match.group(0)
 
-        article = re.sub("\\’", "’", article)
-        article = re.sub("\\\"", "\"", article)
-        article = re.sub("\'", "'", article)
-                         
-        article = article.replace('\\n', '\n')
-        article = article.replace('\\r', '\r')
-        article = article.replace('\\t', '\t')
+        def replace_u8(match):
+            try:
+                return chr(int(match.group(1), 16))
+            except ValueError:
+                return match.group(0)
+
+        text = re.sub(r'\\U([0-9a-fA-F]{8})', replace_u8, text)
+        text = re.sub(r'\\u([0-9a-fA-F]{4})', replace_u4, text)
+        return text
+
+    @staticmethod
+    def _clean_tldr_line(line: str) -> str:
+        stripped = line.strip()
+        if not ("TL;DR" in stripped and (stripped.startswith(">") or stripped.startswith('"') or stripped.startswith("'") or stripped.startswith("“"))):
+            return line
+
+        stripped = stripped.strip('"\'“”').strip()
+
+        if stripped.startswith(">"):
+            content_part = stripped[1:].strip()
+            content_part = content_part.strip('"\'“”').strip()
+
+            m = re.match(r'^(?:["“]?\s*([^\w\s*]+)\s*["“]?)?\s*(\*\*TL;DR:\*\*)\s*(.*)$', content_part, flags=re.IGNORECASE)
+            if m:
+                emoji = m.group(1) or "💡"
+                tag = "**TL;DR:**"
+                summary = m.group(3).strip().strip('"\'“”').strip()
+                return f"> {emoji} {tag} {summary}"
+
+        return line
+
+    def rem_extra(self, article: str) -> str:
+        """Clean up LLM escaping artifacts, decode unicode escape sequences, and preserve LaTeX/code blocks.
+
+        :param article: Raw article content string
+        :type article: str
+        :return: Cleaned article content
+        :rtype: str
+        """
+        if not article or not isinstance(article, str):
+            return article
+
+        # Step 1: Decode Unicode escape sequences everywhere (\uXXXX and \UXXXXXXXX)
+        article = self._decode_unicode(article)
+
+        # Step 2: Protect code blocks and math blocks from prose transformations
+        placeholders = {}
+        counter = 0
+
+        def save_block(match):
+            nonlocal counter
+            key = f"__PROTECTED_BLOCK_{counter}__"
+            counter += 1
+            placeholders[key] = match.group(0)
+            return key
+
+        # Protect fenced code blocks: ```...```
+        article = re.sub(r'```[\s\S]*?```', save_block, article)
+        # Protect display math blocks: $$...$$
+        article = re.sub(r'\$\$[\s\S]*?\$\$', save_block, article)
+        # Protect inline math blocks: $...$ (not currency like $3k, $50M)
+        article = re.sub(r'(?<![\w\\])\$([^\$\n]+?)\$(?![\w])', save_block, article)
+        # Protect inline code: `...`
+        article = re.sub(r'`[^`\n]+`', save_block, article)
+
+        # Step 3: Unescape quotes and apostrophes in prose
+        article = article.replace(r"\'", "'")
+        article = article.replace(r'\"', '"')
+        article = article.replace(r"\’", "’")
+        article = article.replace(r"\“", "“")
+        article = article.replace(r"\”", "”")
+        article = article.replace(r"\`", "`")
+
+        # Step 4: Unescape escaped markdown formatting characters in prose
+        article = re.sub(r'\\\*', '*', article)
+        article = re.sub(r'\\\_', '_', article)
+        article = re.sub(r'\\\|', '|', article)
+        article = re.sub(r'\\\#', '#', article)
+        article = re.sub(r'\\\[', '[', article)
+        article = re.sub(r'\\\]', ']', article)
+
+        # Step 5: Normalize newlines if literal \n is present in prose
+        article = re.sub(r'\\n', '\n', article)
+        article = re.sub(r'\\r', '', article)
+        article = re.sub(r'\\t', '\t', article)
+
+        # Step 6: Process lines for TL;DR and blockquote formatting
+        lines = article.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            cleaned_lines.append(self._clean_tldr_line(line))
+        article = '\n'.join(cleaned_lines)
+
+        # If the entire content string was wrapped in outer quotes
+        article = article.strip()
+        if (article.startswith('"') and article.endswith('"')) or (article.startswith("'") and article.endswith("'")):
+            article = article[1:-1].strip()
+
+        # Step 7: Restore protected blocks
+        for key, val in placeholders.items():
+            article = article.replace(key, val)
 
         return article
 
@@ -430,7 +530,7 @@ class NewsBlogWorkflow:
                         banner_rel_path = self.__banner_filename
 
             # Post-process content to download referenced media and replace with relative paths
-            if self.__include_images and output_path and article and article.get("content"):
+            if self.__include_images and output_path and article and isinstance(article, dict) and article.get("content"):
                 if bundle:
                     output_dir = output_path
                     media_ids = re.findall(r"media-[0-9a-fA-F]+", article["content"])
@@ -468,22 +568,37 @@ class NewsBlogWorkflow:
 
             if banner_rel_path:
                 banner_rel_path = banner_rel_path.replace("\\", "/")
-                image_frontmatter = f"banner: {banner_rel_path}\nimage:\n  caption: '{article['title'] if article['title'] else 'AI News Blog'}'\n  filename: '{banner_rel_path}'\n"
-            elif self.__include_images and output_path and article and article.get("content"):
-                image_frontmatter = f"image:\ncaption: '{article['title'] if article['title'] else 'AI News Blog'}'\n"
+                caption_title = article.get("title") if isinstance(article, dict) and article.get("title") else 'AI News Blog'
+                caption_title = str(caption_title).replace("'", "''")
+                image_frontmatter = f"banner: {banner_rel_path}\nimage:\n  caption: '{caption_title}'\n  filename: '{banner_rel_path}'\n"
+            elif self.__include_images and output_path and article and isinstance(article, dict) and article.get("content"):
+                caption_title = article.get("title") if isinstance(article, dict) and article.get("title") else 'AI News Blog'
+                caption_title = str(caption_title).replace("'", "''")
+                image_frontmatter = f"image:\n  caption: '{caption_title}'\n"
             else:
                 image_frontmatter = ""
 
             date_str = datetime.now().strftime("%Y-%m-%d")
 
+            raw_title = article.get("title", "") if isinstance(article, dict) and article.get("title") else "AI News Blog"
+            raw_summary = article.get("summary", "") if isinstance(article, dict) and article.get("summary") else ""
+            clean_title = self.rem_extra(str(raw_title)).replace('"', '\\"').strip()
+            clean_summary = self.rem_extra(str(raw_summary)).replace('"', '\\"').strip()
+
+            tags_list = article.get("tags", []) if isinstance(article, dict) and article.get("tags") else []
+            tags_str = ('\n  - ' + '\n  - '.join(tags_list)) if tags_list else ""
+
+            content_str = article["content"] if isinstance(article, dict) and article.get("content") else str(article)
+            cleaned_content = self.rem_extra(content_str)
+
             formatted = f"""---
-title: "{article["title"] if article["title"] else 'AI News Blog'}"
-summary: "{article["summary"] if article["summary"] else ''}"
+title: "{clean_title}"
+summary: "{clean_summary}"
 date: {date_str}
 math: true
 authors:
     - admin
-tags:\n  - {'\n  - '.join(article["tags"])}
+tags:{tags_str}
 {image_frontmatter}
 ---
 
@@ -491,7 +606,7 @@ tags:\n  - {'\n  - '.join(article["tags"])}
 
 ---
 
-{self.rem_extra(article["content"]) if article["content"] else str(article)}
+{cleaned_content}
 
 Written with [Argos](https://github.com/Neilstid/argos)
 """
