@@ -7,6 +7,7 @@ from typing import Union, Optional
 import yaml
 
 from app.agents.models.article import Article
+from app.agents.models.plan import BlogPlan
 from app.agents.models.podcast import PodcastScript
 from app.agents.redaction import build_redaction_crew, build_editor_crew
 from app.agents.podcast import build_podcast_crew
@@ -117,7 +118,7 @@ class NewsBlogWorkflow:
         editor_crew = build_editor_crew(interest=self.__interest, model_name=self.__summary_model)
         editor_result = editor_crew.kickoff(inputs={"topic": json.dumps(editor_news)})
         
-        plan_data = editor_result.json_dict
+        plan_data = self._extract_task_data(editor_result, BlogPlan) or {}
         selected_ids = plan_data.get("selected_paper_ids", [])
         table_of_contents = plan_data.get("table_of_contents", "")
 
@@ -142,15 +143,7 @@ class NewsBlogWorkflow:
                 "topic": json.dumps(selected_news),
                 "plan": table_of_contents
             })
-            if result.pydantic:
-                self.__result = result.pydantic.model_dump()
-            elif result.json_dict:
-                self.__result = result.json_dict
-            else:
-                try:
-                    self.__result = json.loads(result.raw)
-                except Exception:
-                    self.__result = None
+            self.__result = self._extract_task_data(result, PodcastScript)
             return result
 
         if output_type == "blogcast":
@@ -173,17 +166,7 @@ class NewsBlogWorkflow:
                 "topic": json.dumps(selected_news),
                 "plan": table_of_contents
             })
-
-            article_data = None
-            if article_result.pydantic:
-                article_data = article_result.pydantic.model_dump()
-            elif article_result.json_dict:
-                article_data = article_result.json_dict
-            else:
-                try:
-                    article_data = json.loads(article_result.raw)
-                except Exception:
-                    article_data = None
+            article_data = self._extract_task_data(article_result, Article)
 
             # 2. Run Podcast Crew to write the dialogue script
             podcast_crew = build_podcast_crew(
@@ -195,17 +178,7 @@ class NewsBlogWorkflow:
                 "topic": json.dumps(selected_news),
                 "plan": table_of_contents
             })
-
-            podcast_data = None
-            if podcast_result.pydantic:
-                podcast_data = podcast_result.pydantic.model_dump()
-            elif podcast_result.json_dict:
-                podcast_data = podcast_result.json_dict
-            else:
-                try:
-                    podcast_data = json.loads(podcast_result.raw)
-                except Exception:
-                    podcast_data = None
+            podcast_data = self._extract_task_data(podcast_result, PodcastScript)
 
             self.__result = {
                 "article": article_data,
@@ -235,15 +208,7 @@ class NewsBlogWorkflow:
             "plan": table_of_contents
         })
 
-        if result.pydantic:
-            self.__result = result.pydantic.model_dump()
-        elif result.json_dict:
-            self.__result = result.json_dict
-        else:
-            try:
-                self.__result = json.loads(result.raw)
-            except Exception:
-                self.__result = None
+        self.__result = self._extract_task_data(result, Article)
         self._generate_banner()
         return result
 
@@ -316,6 +281,38 @@ class NewsBlogWorkflow:
             print(f"Error downloading media from {url}: {e}")
             return None
 
+
+    @staticmethod
+    def _extract_task_data(task_result, model_cls=None) -> Optional[dict]:
+        """Safely extract dictionary data from a CrewAI task result."""
+        if task_result is None:
+            return None
+        if getattr(task_result, "pydantic", None):
+            return task_result.pydantic.model_dump()
+        if getattr(task_result, "json_dict", None):
+            return task_result.json_dict
+
+        if isinstance(task_result, dict):
+            return task_result
+
+        raw = getattr(task_result, "raw", "") or str(task_result)
+        if not raw:
+            return None
+
+        if model_cls and hasattr(model_cls, "model_validate_json"):
+            try:
+                return model_cls.model_validate_json(raw).model_dump()
+            except Exception:
+                pass
+
+        try:
+            return json.loads(raw)
+        except Exception:
+            try:
+                import json_repair
+                return json_repair.loads(raw)
+            except Exception:
+                return None
 
     @staticmethod
     def _decode_unicode(text: str) -> str:

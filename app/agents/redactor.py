@@ -48,7 +48,9 @@ def build_writer_agent(
         
         STRICT FORMATTING REQUIREMENTS:
             1. Return ONLY a valid JSON object matching the Article schema.
-            2. Do not mix terminal output commands within the JSON string.
+            2. Ensure all string values are properly formatted JSON strings.
+            3. When using backslashes in Markdown code snippets (e.g. bash line continuations) or LaTeX equations (e.g. \\sigma, \\log, \\frac), ensure literal backslashes are escaped as \\\\ in the JSON string.
+            4. If you include double quotes inside string values, escape them with a backslash (\\").
         """,
         max_iter=2,
         verbose=True,

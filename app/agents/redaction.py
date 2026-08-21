@@ -28,7 +28,8 @@ def build_editor_crew(
         {topic}
         """,
         expected_output="""
-        A valid JSON object matching the BlogPlan schema.
+        A valid JSON object matching the BlogPlan schema with `selected_paper_ids` and `table_of_contents` fields.
+        Ensure all string values are properly formatted JSON strings.
         """,
         agent=editor,
         output_json=BlogPlan,
@@ -97,6 +98,7 @@ def build_redaction_crew(
         """,
         expected_output="""
         A valid JSON object matching the Article schema with title, summary, tags, and content fields.
+        Ensure all string values are properly formatted JSON strings. When writing LaTeX math equations or code snippets containing backslashes, ensure literal backslashes are escaped as \\\\ in the JSON string.
         """,
         agent=writer,
         output_pydantic=Article

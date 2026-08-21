@@ -1,20 +1,22 @@
 from typing import List
 
 from crewai import Agent
-from pydantic import BaseModel, Field
+from pydantic import Field
+from app.agents.models.base import RobustBaseModel
 
 
-class Mapped(BaseModel):
+class Mapped(RobustBaseModel):
     paperId: str = Field(description="Id of the article to reduce")
     abstract: str = Field(description="A short (4/5 sentences) description of the content of the article")
 
 
-class MappedList(BaseModel):
+class MappedList(RobustBaseModel):
     articles: List[Mapped] = Field(description="List of mapped articles (containing the paperId and the article abstract)")
 
 
-class Reduced(BaseModel):
+class Reduced(RobustBaseModel):
     paperIds: List[str] = Field(description="List of paperId of the article to select")
+
 
 
 def split_on_key(articles: List[dict], key: str):
